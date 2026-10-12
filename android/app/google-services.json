@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "522599517008",
+    "firebase_url": "https://teman-jalan-13983-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "teman-jalan-13983",
+    "storage_bucket": "teman-jalan-13983.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522599517008:android:f6631ecfa0e20af8b2fa55",
+        "android_client_info": {
+          "package_name": "com.example.teman_riset"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWrCeSpbG2v5U3IngJdDOIFhsBXFRUl-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
