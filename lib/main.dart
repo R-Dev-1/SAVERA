@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'home_page.dart';
+import 'pages/landing_page.dart'; // Mengimpor file halaman landing
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +19,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'SENSIS App',
       debugShowCheckedModeBanner: false,
-      title: 'Tes',
-      home: const HomePage(),
+      theme: ThemeData(
+        // Menggunakan kurung siku [] untuk konsistensi palet Material
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue[700]!), 
+        scaffoldBackgroundColor: Colors.blue[50], // Background aplikasi yang lembut
+        useMaterial3: true,
+        fontFamily: 'Roboto', 
+      ),
+      home: const WelcomeScreen(), // Memanggil Halaman 1
     );
   }
 }
