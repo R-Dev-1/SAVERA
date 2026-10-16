@@ -40,7 +40,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               // Judul
               Text(
-                'SENSIS',
+                'SAVERA',
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,

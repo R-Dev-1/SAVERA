@@ -106,7 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Icon(Icons.monitor_heart, color: blue),
                             const SizedBox(width: 8),
-                            Text('SENSIS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: navy)),
+                            Text('SAVERA', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: navy)),
                           ],
                         ),
                         Row(
