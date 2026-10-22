@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'firebase_options.dart';
 import 'pages/landing_page.dart'; // Mengimpor file halaman landing
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // BYPASS FIREBASE: Komentar pada inisialisasi Firebase agar web dapat berjalan tanpa blank white screen
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform,
+  // );
 
   runApp(const MyApp());
 }
@@ -22,11 +23,9 @@ class MyApp extends StatelessWidget {
       title: 'SAVERA App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Menggunakan kurung siku [] untuk konsistensi palet Material
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue[700]!), 
-        scaffoldBackgroundColor: Colors.blue[50], // Background aplikasi yang lembut
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E6FEB)), 
+        scaffoldBackgroundColor: const Color(0xFFF0F7FF), // Palet --l1 #F0F7FF
         useMaterial3: true,
-        fontFamily: 'Roboto', 
       ),
       home: const WelcomeScreen(), // Memanggil Halaman 1
     );

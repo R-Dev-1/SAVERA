@@ -1,0 +1,552 @@
+import 'package:flutter/material.dart';
+import '../models/patient_profile.dart';
+import 'home_page.dart';
+
+/// Halaman Profil Pasien (Mendukung mode Setup dan mode Edit)
+/// Sesuai spesifikasi 100% dari SAVERA_Semua_Halaman.html (Halaman 2 & 6)
+class ProfilePage extends StatefulWidget {
+  final bool isSetup; // true: Isi Profil Pasien (Halaman 2), false: Edit Profil Pasien (Halaman 6)
+
+  const ProfilePage({super.key, this.isSetup = false});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late TextEditingController _namaController;
+  late TextEditingController _usiaController;
+  late TextEditingController _tinggiController;
+  late TextEditingController _beratController;
+  late TextEditingController _catatanController;
+
+  late String _selectedJk;
+  String? _errorMessage;
+  bool _savedSuccess = false;
+
+  // Warna sesuai UI Guidelines SAVERA
+  static const Color kNavy = Color(0xFF0B2A6E);
+  static const Color kInk = Color(0xFF0F1E3D);
+  static const Color kBlue = Color(0xFF1E6FEB);
+  static const Color kSky = Color(0xFF0EA5E9);
+  static const Color kL1 = Color(0xFFF0F7FF);
+  static const Color kL2 = Color(0xFFE0F0FE);
+  static const Color kLine = Color(0xFFD6E6FB);
+  static const Color kInputLine = Color(0xFFBFD8F7);
+  static const Color kMuted = Color(0xFF64748B);
+  static const Color kBody = Color(0xFF334155);
+
+  @override
+  void initState() {
+    super.initState();
+    _namaController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.nama);
+    _usiaController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.usia);
+    _tinggiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.tinggi);
+    _beratController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.berat);
+    _catatanController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.catatan);
+    _selectedJk = widget.isSetup ? 'Laki-laki' : PatientProfile.jk;
+  }
+
+  @override
+  void dispose() {
+    _namaController.dispose();
+    _usiaController.dispose();
+    _tinggiController.dispose();
+    _beratController.dispose();
+    _catatanController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final nama = _namaController.text.trim();
+    final usia = _usiaController.text.trim();
+
+    if (widget.isSetup && (nama.isEmpty || usia.isEmpty)) {
+      setState(() {
+        _errorMessage = 'Nama dan usia wajib diisi';
+        _savedSuccess = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _errorMessage = null;
+      _savedSuccess = true;
+      PatientProfile.nama = nama.isEmpty ? 'Pak Budi' : nama;
+      PatientProfile.usia = usia.isEmpty ? '72' : usia;
+      PatientProfile.jk = _selectedJk;
+      PatientProfile.tinggi = _tinggiController.text.trim().isEmpty ? '165' : _tinggiController.text.trim();
+      PatientProfile.berat = _beratController.text.trim().isEmpty ? '62' : _beratController.text.trim();
+      PatientProfile.catatan = _catatanController.text.trim();
+    });
+
+    if (widget.isSetup) {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      });
+    } else {
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (!mounted) return;
+        Navigator.pop(context, true);
+      });
+    }
+  }
+
+  String get _currentInitials {
+    final text = _namaController.text.trim();
+    if (text.isEmpty) return '';
+    final parts = text.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kL1,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(18.0, 14.0, 18.0, 22.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+
+                  // --- Header Halaman ---
+                  if (widget.isSetup) ...[
+                    const Text(
+                      'Pengaturan awal',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kBlue),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Isi Profil Pasien',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kNavy),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Isi data lansia yang akan dipantau. Data ini bisa diubah nanti lewat tombol profil di Beranda.',
+                      style: TextStyle(fontSize: 13.5, height: 1.5, color: kBody),
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(19),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: kLine),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: kNavy),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Profil Pasien',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kNavy),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // --- Avatar Besar dengan Badge Kamera ---
+                  Center(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [kSky, kBlue],
+                            ),
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x2E1E6FEB), blurRadius: 10, offset: Offset(0, 4)),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: _currentInitials.isNotEmpty
+                              ? Text(
+                                  _currentInitials,
+                                  style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: Colors.white),
+                                )
+                              : const Icon(Icons.person, size: 48, color: Colors.white),
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: kBlue,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.camera_alt, size: 15, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    widget.isSetup ? 'Tambah Foto (opsional)' : 'Ubah Foto',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kBlue),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // --- Pesan Sukses / Error ---
+                  if (_errorMessage != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF92400E)),
+                      ),
+                    ),
+
+                  if (_savedSuccess)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: Text(
+                        widget.isSetup ? 'Profil tersimpan. Menuju Beranda...' : 'Profil berhasil disimpan',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF065F46)),
+                      ),
+                    ),
+
+                  // --- Form Card (.card.form) ---
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kLine),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x121E6FEB), blurRadius: 12, offset: Offset(0, 3)),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Field Nama
+                        Text(
+                          widget.isSetup ? 'Nama *' : 'Nama',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                        ),
+                        const SizedBox(height: 6),
+                        _buildTextInput(
+                          controller: _namaController,
+                          placeholder: 'Contoh: Pak Budi',
+                          onChanged: (_) => setState(() {}),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Field Jenis Kelamin (Segmented Button)
+                        const Text(
+                          'Jenis Kelamin',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSegButton(
+                                label: 'Laki-laki',
+                                isSelected: _selectedJk == 'Laki-laki',
+                                onTap: () => setState(() => _selectedJk = 'Laki-laki'),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: _buildSegButton(
+                                label: 'Perempuan',
+                                isSelected: _selectedJk == 'Perempuan',
+                                onTap: () => setState(() => _selectedJk = 'Perempuan'),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // 3 Kolom: Usia, Tinggi, Berat
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.isSetup ? 'Usia (th) *' : 'Usia (th)',
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildTextInput(
+                                    controller: _usiaController,
+                                    placeholder: '72',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Tinggi (cm)',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildTextInput(
+                                    controller: _tinggiController,
+                                    placeholder: '165',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Berat (kg)',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildTextInput(
+                                    controller: _beratController,
+                                    placeholder: '60',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Catatan Kesehatan
+                        const Text(
+                          'Catatan Kesehatan (opsional)',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: kInputLine),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          child: TextField(
+                            controller: _catatanController,
+                            maxLines: 2,
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: kInk),
+                            decoration: const InputDecoration(
+                              hintText: 'Contoh: riwayat penyakit atau alergi',
+                              hintStyle: TextStyle(color: kMuted, fontSize: 13),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // --- Card Jam Tangan Pasien (.card.dev) ---
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kLine),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x121E6FEB), blurRadius: 12, offset: Offset(0, 3)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: kL2,
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.watch_rounded, size: 20, color: kBlue),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Jam Tangan Pasien',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInk),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'device_001 • Terhubung',
+                              style: TextStyle(fontSize: 12, color: kMuted),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // --- Tombol Simpan (.btn) ---
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [kSky, kBlue],
+                      ),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x4D1E6FEB), blurRadius: 24, offset: Offset(0, 10)),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: _save,
+                        child: Center(
+                          child: Text(
+                            widget.isSetup ? 'Simpan & Mulai Pantau' : 'Simpan Profil',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextInput({
+    required TextEditingController controller,
+    required String placeholder,
+    TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+  }) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kInputLine),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      alignment: Alignment.centerLeft,
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        onChanged: onChanged,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: kInk),
+        decoration: InputDecoration(
+          hintText: placeholder,
+          hintStyle: const TextStyle(color: kMuted, fontSize: 13),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: isSelected ? kL2 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? kBlue : kInputLine),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? kNavy : kBody,
+          ),
+        ),
+      ),
+    );
+  }
+}
