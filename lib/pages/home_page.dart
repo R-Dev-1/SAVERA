@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/patient_profile.dart';
 import 'profile_page.dart';
+import '../widgets/animated_savera_text.dart';
 
 /// ============================================================================
 /// SAVERA - BERANDA (DASHBOARD)
@@ -59,27 +60,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   // --- 1. Header Card (.card.hdr) ---
                   _buildHeaderCard(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
                   // --- 2. Banner Status (.banner ok / sb) ---
                   _buildStatusBanner(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
                   // --- 3. Grid Tanda Vital (1fr 1fr) ---
                   _buildVitalsGrid(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
                   // --- 4. Card Tren Denyut Nadi ---
                   _buildPulseTrendCard(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
                   // --- 5. Card Lokasi Pemantauan ---
                   _buildLocationCard(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
                   // --- 6. Card Riwayat Kejadian (.tl) ---
                   _buildHistoryCard(),
@@ -119,16 +120,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: kBlue,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'SAVERA',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                      color: kNavy,
-                    ),
+                  const SizedBox(width: 8),
+                  const AnimatedSaveraText(
+                    fontSize: 20,
+                    letterSpacing: 2.0,
+                    fontWeight: FontWeight.w900,
+                    padding: EdgeInsets.zero,
+                    textAlign: TextAlign.left,
                   ),
                 ],
               ),

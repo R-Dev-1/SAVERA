@@ -1,3 +1,5 @@
+import 'dart:io';
+
 /// Model data pasien SAVERA
 class PatientProfile {
   static String nama = 'Pak Budi';
@@ -6,6 +8,7 @@ class PatientProfile {
   static String tinggi = '165';
   static String berat = '62';
   static String catatan = '';
+  static File? fotoFile; // File foto lokal yang dipilih user
 
   static String get initials {
     final parts = nama.trim().split(RegExp(r'\s+'));

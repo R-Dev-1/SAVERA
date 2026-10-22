@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile_page.dart'; // Navigasi ke Halaman Isi Profil Pasien
+import '../widgets/firebase_test_widget.dart'; // Modal pengujian real-time Firebase
+import '../widgets/animated_savera_text.dart'; // Teks animasi siluet SAVERA
 
 /// ============================================================================
 /// SAVERA - LAYAR SAMBUTAN (WELCOME SCREEN)
@@ -64,8 +66,9 @@ class WelcomeScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                const SizedBox(height: 18),
+
                                 // --- Hero Section (.hero) ---
-                                const SizedBox(height: 16),
                                 Column(
                                   children: [
                                     // Logo SAVERA (Tinggi 128px persis sesuai CSS .hero img)
@@ -73,36 +76,14 @@ class WelcomeScreen extends StatelessWidget {
                                       'assets/images/logo_perisai.png',
                                       height: 128,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Image.asset(
-                                          'assets/images/logo_savera_banner.png',
-                                          height: 128,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.shield_rounded,
-                                              size: 110,
-                                              color: kBlue,
-                                            );
-                                          },
-                                        );
-                                      },
                                     ),
                                     const SizedBox(height: 20),
 
-                                    // Judul Aplikasi (.nm)
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 7.0),
-                                      child: Text(
-                                        'SAVERA',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 38,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 7.0,
-                                          color: kNavy,
-                                        ),
-                                      ),
+                                    // Judul Aplikasi (.nm) dengan animasi siluet cahaya & bold
+                                    const AnimatedSaveraText(
+                                      fontSize: 38,
+                                      letterSpacing: 7.0,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                     const SizedBox(height: 6),
 
@@ -248,6 +229,20 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'firebase_test_btn',
+        onPressed: () => showFirebaseTestModal(context),
+        backgroundColor: kBlue,
+        icon: const Icon(Icons.cloud_sync, color: Colors.white, size: 20),
+        label: const Text(
+          'Tes Firebase',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

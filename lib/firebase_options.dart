@@ -5,22 +5,10 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -48,6 +36,16 @@ class DefaultFirebaseOptions {
         );
     }
   }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBCiIAgUD1CnXwjnVK1MHJOcNLWYdeiWcs',
+    appId: '1:522599517008:web:b9ab92350578eed2b2fa55',
+    messagingSenderId: '522599517008',
+    projectId: 'teman-jalan-13983',
+    authDomain: 'teman-jalan-13983.firebaseapp.com',
+    databaseURL: 'https://teman-jalan-13983-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'teman-jalan-13983.firebasestorage.app',
+  );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBWrCeSpbG2v5U3IngJdDOIFhsBXFRUl-0',
