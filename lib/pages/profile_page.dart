@@ -37,42 +37,46 @@ class _ProfilePageState extends State<ProfilePage> {
         builder: (ctx) => Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F3580),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0x33FFFFFF)),
+            border: Border.all(color: kLine),
+            boxShadow: const [
+              BoxShadow(color: Color(0x1F1E6FEB), blurRadius: 16, offset: Offset(0, 4)),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
               Container(
-                width: 36, height: 4,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0x55FFFFFF),
+                  color: const Color(0xFFD6E6FB),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Pilih Foto Profil',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kNavy),
               ),
               const SizedBox(height: 8),
-              const Divider(color: Color(0x33FFFFFF)),
+              const Divider(color: Color(0xFFE2F0FD)),
               ListTile(
                 leading: const CircleAvatar(
-                  backgroundColor: Color(0xFF1E5FCC),
-                  child: Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                  backgroundColor: Color(0xFFE0F0FE),
+                  child: Icon(Icons.camera_alt_rounded, color: kBlue, size: 20),
                 ),
-                title: const Text('Kamera', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                title: const Text('Kamera', style: TextStyle(color: kInk, fontWeight: FontWeight.w500)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
                 leading: const CircleAvatar(
-                  backgroundColor: Color(0xFF1E5FCC),
-                  child: Icon(Icons.photo_library_rounded, color: Colors.white, size: 20),
+                  backgroundColor: Color(0xFFE0F0FE),
+                  child: Icon(Icons.photo_library_rounded, color: kBlue, size: 20),
                 ),
-                title: const Text('Galeri Foto', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                title: const Text('Galeri Foto', style: TextStyle(color: kInk, fontWeight: FontWeight.w500)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -189,7 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A2559),
+      backgroundColor: Colors.white,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
@@ -201,151 +205,91 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   const SizedBox(height: 10),
 
-                    // --- Card Header Halaman (mode Setup: navy premium, mode Edit: biasa) ---
+                  // --- Card Header Halaman ---
+                  if (widget.isSetup)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                       decoration: BoxDecoration(
-                        gradient: widget.isSetup
-                            ? const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF1E5FCC), // biru premium
-                                  Color(0xFF0B2A6E), // navy tua
-                                ],
-                              )
-                            : const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFFE2F0FD),
-                                  Color(0xFFEFF7FF),
-                                ],
-                              ),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: widget.isSetup
-                              ? const Color(0xFF2D6FDB)
-                              : const Color(0xFFC0DCF9),
-                        ),
-                        boxShadow: [
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
                           BoxShadow(
-                            color: widget.isSetup
-                                ? const Color(0x551E6FEB)
-                                : const Color(0x0C1E6FEB),
-                            blurRadius: widget.isSetup ? 20 : 10,
-                            offset: const Offset(0, 6),
+                            color: Color(0x121E6FEB),
+                            blurRadius: 14,
+                            offset: Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.isSetup) ...[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF7EB8FF), // biru terang di atas navy
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'PENGATURAN AWAL',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
-                                      color: Color(0xFF7EB8FF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0x33FFFFFF),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0x55FFFFFF)),
-                                ),
-                                child: const Text(
-                                  'Langkah 1/1',
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xCCFFFFFF),
-                                  ),
-                                ),
-                              ),
-                            ],
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          'assets/images/header_profil_pasien_card.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFE2F0FD),
+                            Color(0xFFEFF7FF),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFFC0DCF9),
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0C1E6FEB),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Isi Profil Pasien',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
-                              color: Colors.white,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: () => Navigator.pop(context),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: const Color(0xCCFFFFFF),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFC0DCF9)),
+                              ),
+                              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: kBlue),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Isi data lansia yang akan dipantau. Data ini bisa diubah nanti lewat tombol profil di Beranda.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.52,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xCCFFFFFF),
-                            ),
-                          ),
-                        ] else ...[
-                          Row(
+                          const SizedBox(width: 10),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(7),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xCCFFFFFF),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFFC0DCF9)),
+                              Text(
+                                'Profil Pasien',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  color: kNavy,
                                 ),
-                                child: const Icon(Icons.person_outline_rounded, size: 18, color: kBlue),
                               ),
-                              const SizedBox(width: 10),
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Profil Pasien',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.3,
-                                      color: kNavy,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Perbarui informasi data lansia',
-                                    style: TextStyle(fontSize: 12, color: kMuted),
-                                  ),
-                                ],
+                              SizedBox(height: 2),
+                              Text(
+                                'Perbarui informasi data lansia',
+                                style: TextStyle(fontSize: 12, color: kMuted),
                               ),
                             ],
                           ),
                         ],
-                      ],
-                    ),
+                      ),
                     ),
 
-                    const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
                   // --- Avatar Besar dengan Badge Kamera (tap untuk upload) ---
                   GestureDetector(
@@ -358,13 +302,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           Container(
                             width: 96,
                             height: 96,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: widget.isSetup
-                                      ? const Color(0x66FFFFFF)
-                                      : const Color(0xFFBAE0FD),
+                                  color: Color(0xFFBAE0FD),
                                   spreadRadius: 3.0,
                                   blurRadius: 8,
                                 ),
@@ -434,10 +376,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: _pickedPhoto != null
-                          ? const Color(0xFF4ADE80)
-                          : const Color(0xFF7EB8FF),
+                          ? const Color(0xFF059669)
+                          : kBlue,
                     ),
                   ),
 
@@ -548,7 +490,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                     controller: _usiaController,
                                     placeholder: '72',
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -567,7 +512,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                     controller: _tinggiController,
                                     placeholder: '165',
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -586,7 +534,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                     controller: _beratController,
                                     placeholder: '60',
                                     keyboardType: TextInputType.number,
-                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -713,9 +664,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTextInput({
     required TextEditingController controller,

@@ -25,7 +25,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const Color kBlue = Color(0xFF1E6FEB);
   static const Color kSky = Color(0xFF0EA5E9);
   static const Color kL1 = Color(0xFFF0F7FF);
-  static const Color kL3 = Color(0xFFBAE0FD);
   static const Color kLine = Color(0xFFD6E6FB);
   static const Color kMuted = Color(0xFF64748B);
   static const Color kBody = Color(0xFF334155);
@@ -96,34 +95,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ===========================================================================
   // 1. HEADER CARD (.card.hdr)
   // ===========================================================================
+  // ===========================================================================
+  // 1. HEADER CARD (.card.hdr) - Sesuai rancangan visual header.jpg
+  // ===========================================================================
   Widget _buildHeaderCard() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: _cardDecoration(),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD6E6FB), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x101E6FEB),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Baris Brand & Profil
+          // 1. Baris Atas: Logo Brand SAVERA di kiri & Tombol Profil di kanan
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Brand Logo & Teks
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
                     'assets/images/logo_perisai.png',
-                    height: 34,
+                    height: 28,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.shield_rounded,
-                      size: 32,
+                      size: 26,
                       color: kBlue,
                     ),
                   ),
                   const SizedBox(width: 8),
                   const AnimatedSaveraText(
-                    fontSize: 20,
-                    letterSpacing: 2.0,
+                    fontSize: 19,
+                    letterSpacing: 1.8,
                     fontWeight: FontWeight.w900,
                     padding: EdgeInsets.zero,
                     textAlign: TextAlign.left,
@@ -131,85 +145,422 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
 
-              // Tombol Avatar Profil (.pf) dengan Badge Pensil (.pen)
+              // Tombol / Chip Profil di Kanan Atas
               InkWell(
                 onTap: _openProfile,
-                borderRadius: BorderRadius.circular(23),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [kSky, kBlue],
-                        ),
-                        border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: const [
-                          BoxShadow(color: kL3, spreadRadius: 2),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        PatientProfile.initials,
-                        style: const TextStyle(
-                          fontSize: 15,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Profil',
+                        style: TextStyle(
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: kBlue,
                         ),
                       ),
-                    ),
-                    Positioned(
-                      right: -3,
-                      bottom: -3,
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: kLine),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.edit, size: 11, color: kBlue),
+                      SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 15,
+                        color: kBlue,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
 
-          // Garis Pembatas & Data Pasien (.who)
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.only(top: 14),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: kLine)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 12),
+
+          // 2. Baris Tengah: Profil Pasien (Avatar Ring Glowing + Nama & Usia) + Status Badge (Sedang Dipantau) di kanan
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
               children: [
-                const Text(
-                  'Sedang dipantau',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: kMuted),
-                ),
-                const SizedBox(height: 2),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontFamily: 'Inter', color: kNavy),
+                // Avatar Pasien dengan Glowing Ring Gradient & Mini Edit Badge
+                GestureDetector(
+                  onTap: _openProfile,
+                  child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      TextSpan(
-                        text: PatientProfile.nama,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: SweepGradient(
+                            colors: _isWatchOff
+                                ? [
+                                    const Color(0xFF94A3B8),
+                                    const Color(0xFFCBD5E1),
+                                    const Color(0xFF94A3B8),
+                                  ]
+                                : [
+                                    const Color(0xFF38BDF8),
+                                    const Color(0xFF3B82F6),
+                                    const Color(0xFF818CF8),
+                                    const Color(0xFF06B6D4),
+                                    const Color(0xFF38BDF8),
+                                  ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _isWatchOff
+                                  ? const Color(0x1464748B)
+                                  : const Color(0x2838BDF8),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(2.5),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(2),
+                          child: ClipOval(
+                            child: PatientProfile.fotoFile != null
+                                ? Image.file(
+                                    PatientProfile.fotoFile!,
+                                    fit: BoxFit.cover,
+                                    width: 44,
+                                    height: 44,
+                                  )
+                                : Container(
+                                    color: const Color(0xFFCBD5E1),
+                                    child: const Icon(
+                                      Icons.person_rounded,
+                                      size: 32,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ),
-                      TextSpan(
-                        text: ' • ${PatientProfile.usia} Tahun',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: kMuted),
+                      Positioned(
+                        right: -1,
+                        bottom: -1,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFD6E6FB), width: 1.2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x1A000000),
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.edit_rounded,
+                            size: 10,
+                            color: kBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Info Nama & Usia Pasien (dapat diklik untuk ke profil)
+                Expanded(
+                  child: InkWell(
+                    onTap: _openProfile,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          PatientProfile.nama,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kNavy,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFDBEAFE)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.cake_outlined, size: 13, color: kNavy),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${PatientProfile.usia} Tahun',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: kNavy,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Status Badge Interaktif (🟢 Sedang Dipantau / ⏸ Jam Dilepas)
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isWatchOff = !_isWatchOff;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _isWatchOff ? const Color(0xFFFEF3C7) : const Color(0xFFE8FDF0),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _isWatchOff ? const Color(0xFFFCD34D) : const Color(0xFF86EFAC),
+                        width: 1.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isWatchOff
+                              ? const Color(0x14D97706)
+                              : const Color(0x1416A34A),
+                          blurRadius: 6,
+                          offset: const Offset(0, 1.5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: _isWatchOff
+                                ? const Color(0xFFD97706)
+                                : const Color(0xFF16A34A),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isWatchOff ? 'Jam Dilepas' : 'Sedang Dipantau',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _isWatchOff
+                                ? const Color(0xFFB45309)
+                                : const Color(0xFF15803D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 3. Baris Bawah: Panel Statistik Ramping 3 Kolom (Koneksi, Baterai, Pembaruan)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                // Kolom 1: Koneksi
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Row(
+                        children: [
+                          Text(
+                            'Koneksi',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          SizedBox(width: 3),
+                          Icon(Icons.sensors_rounded, size: 13, color: Color(0xFF475569)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              _isWatchOff ? 'Dilepas' : 'Terhubung',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: _isWatchOff ? const Color(0xFF64748B) : const Color(0xFF0284C7),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        _isWatchOff ? 'Sensor nonaktif' : 'Gateway aktif',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Pembatas Vertikal 1
+                Container(
+                  width: 1,
+                  height: 38,
+                  color: const Color(0xFFE2E8F0),
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+
+                // Kolom 2: Baterai
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Baterai',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            _isWatchOff ? '--' : '85%',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF16A34A),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Icon(
+                            _isWatchOff ? Icons.battery_unknown_rounded : Icons.battery_5_bar_rounded,
+                            size: 14,
+                            color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF16A34A),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        _isWatchOff ? 'Dilepas' : 'Jam tangan',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Pembatas Vertikal 2
+                Container(
+                  width: 1,
+                  height: 38,
+                  color: const Color(0xFFE2E8F0),
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+
+                // Kolom 3: Pembaruan
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Row(
+                        children: [
+                          Text(
+                            'Pembaruan',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          SizedBox(width: 3),
+                          Icon(Icons.refresh_rounded, size: 13, color: Color(0xFF475569)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isWatchOff ? 'Dijeda' : 'Baru saja',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: _isWatchOff ? const Color(0xFF64748B) : kInk,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        _isWatchOff ? 'Menunggu' : '120 ms',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: _isWatchOff ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -217,101 +568,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-
-          // 3 Tiles Grid (.tiles)
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              // Tile 1: Koneksi
-              Expanded(
-                child: _buildTile(
-                  title: 'Koneksi',
-                  content: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: _isWatchOff ? const Color(0xFF94A3B8) : kSky,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        _isWatchOff ? 'Dilepas' : 'Terhubung',
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: kInk),
-                      ),
-                    ],
-                  ),
-                  subtitle: 'Gateway aktif',
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Tile 2: Baterai
-              Expanded(
-                child: _buildTile(
-                  title: 'Baterai',
-                  content: const Text(
-                    '85%',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: kInk),
-                  ),
-                  subtitle: 'Jam tangan',
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Tile 3: Pembaruan
-              Expanded(
-                child: _buildTile(
-                  title: 'Pembaruan',
-                  content: const Text(
-                    'Baru saja',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: kInk),
-                  ),
-                  subtitle: '120 ms',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTile({
-    required String title,
-    required Widget content,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
-      decoration: BoxDecoration(
-        color: kL1,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kLine),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: kMuted),
-          ),
-          const SizedBox(height: 3),
-          content,
-          const SizedBox(height: 1),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 10.5, color: kMuted),
-          ),
         ],
       ),
     );
   }
 
   // ===========================================================================
-  // 2. BANNER STATUS (.banner ok / sb) - Dapat diklik untuk simulasi jam dilepas
+  // 2. BANNER STATUS (.banner ok / sb) - Format Persegi Panjang Ramping (Fokus Teks BA & BG)
   // ===========================================================================
   Widget _buildStatusBanner() {
     return InkWell(
@@ -322,70 +585,197 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: _isWatchOff ? const Color(0xFFE8EDF3) : null,
           gradient: _isWatchOff
-              ? null
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFEF9C3), Color(0xFFFEF3C7)],
+                )
               : const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFBBF7D0), Color(0xFFECFDF5)],
+                  colors: [Color(0xFFE8FDF2), Color(0xFFE0F8EC)],
                 ),
-          border: _isWatchOff
-              ? Border.all(color: const Color(0xFF94A3B8), width: 1.2)
-              : Border.all(color: const Color(0xFFA7F3D0)),
-        ),
-        child: Row(
-          children: [
-            // Ikon Banner (Shield dengan Ceklis untuk normal, Pause untuk dilepas)
-            CustomPaint(
-              size: const Size(40, 40),
-              painter: _isWatchOff
-                  ? const PauseCirclePainter(color: Color(0xFF475569))
-                  : const ShieldCheckPainter(color: Color(0xFF059669)),
+          border: Border.all(
+            color: _isWatchOff ? const Color(0xFFFDE68A) : const Color(0xFFA7F3D0),
+            width: 1.1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _isWatchOff ? const Color(0x0F000000) : const Color(0x10059669),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-            const SizedBox(width: 14),
-
-            // Teks Banner
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _isWatchOff ? 'JEDA: JAM TANGAN DILEPAS' : 'AKTIVITAS NORMAL / AMAN',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: _isWatchOff ? const Color(0xFF1E293B) : const Color(0xFF065F46),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Baris 1: Ikon Status & Teks Aktivitas
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Ikon Status Compact (Checkmark / Pause)
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _isWatchOff
+                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+                          : [const Color(0xFF10B981), const Color(0xFF059669)],
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    _isWatchOff ? 'Deteksi jatuh dijeda (Ketuk untuk ganti mode)' : 'Status jatuh: Normal (Ketuk untuk ganti mode)',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: _isWatchOff ? const Color(0xFF475569) : kBody,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Badge IMU
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xD9FFFFFF),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      _isWatchOff ? 'BA: -- • BG: --' : 'BA: 1.02g • BG: 3°/s',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: kInk,
+                    borderRadius: BorderRadius.circular(11),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _isWatchOff ? const Color(0x28D97706) : const Color(0x28059669),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
+                    ],
+                  ),
+                  child: Icon(
+                    _isWatchOff ? Icons.pause_rounded : Icons.check_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Judul & Status Subteks
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _isWatchOff ? 'JEDA: JAM TANGAN DILEPAS' : 'AKTIVITAS NORMAL / AMAN',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w900,
+                          color: _isWatchOff ? const Color(0xFF78350F) : const Color(0xFF064E3B),
+                          letterSpacing: 0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            _isWatchOff ? Icons.pause_circle_rounded : Icons.shield_rounded,
+                            size: 13,
+                            color: _isWatchOff ? const Color(0xFFD97706) : const Color(0xFF059669),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isWatchOff ? 'Deteksi Dijeda' : 'Status: Normal',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: _isWatchOff ? const Color(0xFF92400E) : const Color(0xFF065F46),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '• (Ketuk ganti mode)',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontStyle: FontStyle.italic,
+                              color: _isWatchOff ? const Color(0xFFB45309) : const Color(0xFF047857),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 9),
+
+            // Baris 2: Panel BA & BG Murni Teks (Tanpa Ikon)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(
+                  color: _isWatchOff ? const Color(0xFFFDE68A) : const Color(0xFFD1FAE5),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x06000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 1.5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Kolom 1: BA (Fokus Teks, Tanpa Ikon)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'BA: ',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: _isWatchOff ? const Color(0xFF92400E) : kBody,
+                          ),
+                        ),
+                        Text(
+                          _isWatchOff ? '--' : '1.02g',
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            color: _isWatchOff ? const Color(0xFF78350F) : const Color(0xFF064E3B),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Garis Pembatas Vertikal Halus
+                  Container(
+                    width: 1,
+                    height: 22,
+                    color: _isWatchOff ? const Color(0xFFFDE68A) : const Color(0xFFD1FAE5),
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+
+                  // Kolom 2: BG (Fokus Teks, Tanpa Ikon)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'BG: ',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: _isWatchOff ? const Color(0xFF92400E) : kBody,
+                          ),
+                        ),
+                        Text(
+                          _isWatchOff ? '--' : '3°/s',
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            color: _isWatchOff ? const Color(0xFF78350F) : const Color(0xFF064E3B),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
