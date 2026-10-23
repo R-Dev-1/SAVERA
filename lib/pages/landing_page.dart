@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'profile_page.dart'; // Navigasi ke Halaman Isi Profil Pasien
-import '../widgets/firebase_test_widget.dart'; // Modal pengujian real-time Firebase
 import '../widgets/animated_savera_text.dart'; // Teks animasi siluet SAVERA
 
 /// ============================================================================
@@ -229,20 +228,6 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'firebase_test_btn',
-        onPressed: () => showFirebaseTestModal(context),
-        backgroundColor: kBlue,
-        icon: const Icon(Icons.cloud_sync, color: Colors.white, size: 20),
-        label: const Text(
-          'Tes Firebase',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
           ),
         ),
       ),

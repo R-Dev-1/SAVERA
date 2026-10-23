@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,12 +20,13 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _usiaController;
   late TextEditingController _tinggiController;
   late TextEditingController _beratController;
+  late TextEditingController _lokasiController;
   late TextEditingController _catatanController;
 
   late String _selectedJk;
   String? _errorMessage;
   bool _savedSuccess = false;
-  File? _pickedPhoto;
+  Uint8List? _pickedBytes;
 
   Future<void> _pickPhoto() async {
     try {
@@ -91,11 +91,14 @@ class _ProfilePageState extends State<ProfilePage> {
         maxWidth: 512,
         maxHeight: 512,
       );
-      if (file != null && mounted) {
-        setState(() {
-          _pickedPhoto = File(file.path);
-          PatientProfile.fotoFile = _pickedPhoto;
-        });
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        if (mounted) {
+          setState(() {
+            _pickedBytes = bytes;
+            PatientProfile.fotoBytes = bytes;
+          });
+        }
       }
     } catch (e) {
       // ignore: user mungkin tolak permission
@@ -120,9 +123,10 @@ class _ProfilePageState extends State<ProfilePage> {
     _usiaController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.usia);
     _tinggiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.tinggi);
     _beratController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.berat);
+    _lokasiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.lokasi);
     _catatanController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.catatan);
     _selectedJk = widget.isSetup ? 'Laki-laki' : PatientProfile.jk;
-    _pickedPhoto = PatientProfile.fotoFile; // load existing photo if any
+    _pickedBytes = PatientProfile.fotoBytes; // load existing photo if any
   }
 
   @override
@@ -131,6 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _usiaController.dispose();
     _tinggiController.dispose();
     _beratController.dispose();
+    _lokasiController.dispose();
     _catatanController.dispose();
     super.dispose();
   }
@@ -147,6 +152,8 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
 
+    final lokasi = _lokasiController.text.trim();
+
     setState(() {
       _errorMessage = null;
       _savedSuccess = true;
@@ -155,6 +162,9 @@ class _ProfilePageState extends State<ProfilePage> {
       PatientProfile.jk = _selectedJk;
       PatientProfile.tinggi = _tinggiController.text.trim().isEmpty ? '165' : _tinggiController.text.trim();
       PatientProfile.berat = _beratController.text.trim().isEmpty ? '62' : _beratController.text.trim();
+      PatientProfile.lokasi = lokasi.isEmpty
+          ? (widget.isSetup ? 'Rumah - Jl. Merdeka No. 12, Bandung' : PatientProfile.lokasi)
+          : lokasi;
       PatientProfile.catatan = _catatanController.text.trim();
     });
 
@@ -312,10 +322,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            child: _pickedPhoto != null
+                            child: _pickedBytes != null
                                 ? CircleAvatar(
                                     radius: 48,
-                                    backgroundImage: FileImage(_pickedPhoto!),
+                                    backgroundImage: MemoryImage(_pickedBytes!),
                                   )
                                 : Container(
                                     decoration: BoxDecoration(
@@ -370,14 +380,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 8),
 
                   Text(
-                    _pickedPhoto != null
+                    _pickedBytes != null
                         ? 'Foto terpilih ✓'
                         : (widget.isSetup ? 'Tap untuk tambah foto (opsional)' : 'Tap untuk ubah foto'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _pickedPhoto != null
+                      color: _pickedBytes != null
                           ? const Color(0xFF059669)
                           : kBlue,
                     ),
@@ -547,6 +557,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const SizedBox(height: 14),
 
+                        // Lokasi Pemantauan (Alamat Tempat Tinggal Pasien)
+                        const Text(
+                          'Lokasi Pemantauan (Alamat)',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                        ),
+                        const SizedBox(height: 6),
+                        _buildTextInput(
+                          controller: _lokasiController,
+                          placeholder: 'Contoh: Rumah - Jl. Merdeka No. 12, Bandung',
+                          onChanged: (_) => setState(() {}),
+                        ),
+
+                        const SizedBox(height: 14),
+
                         // Catatan Kesehatan
                         const Text(
                           'Catatan Kesehatan (opsional)',
@@ -648,7 +672,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Text(
                             widget.isSetup ? 'Simpan & Mulai Pantau' : 'Simpan Profil',
                             style: const TextStyle(
-                              fontFamily: 'Inter',
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,

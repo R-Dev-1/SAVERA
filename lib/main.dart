@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'pages/landing_page.dart'; // Mengimpor file halaman landing
 
@@ -59,9 +60,10 @@ class MyApp extends StatelessWidget {
       title: 'SAVERA App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'Inter',
+        fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E6FEB)), 
-        scaffoldBackgroundColor: const Color(0xFFF0F7FF), // Palet --l1 #F0F7FF
+        scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
       home: const WelcomeScreen(), // Memanggil Halaman 1

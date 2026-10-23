@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Widget teks "SAVERA" tebal (bold) dengan animasi siluet cahaya / shimmer berkilau elegan
 class AnimatedSaveraText extends StatefulWidget {
@@ -76,11 +77,11 @@ class _AnimatedSaveraTextState extends State<AnimatedSaveraText>
             child: Text(
               'SAVERA',
               textAlign: widget.textAlign,
-              style: TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: widget.fontSize,
                 fontWeight: widget.fontWeight,
                 letterSpacing: widget.letterSpacing,
+                height: 1.05,
                 color: Colors.white, // Dibutuhkan oleh ShaderMask
               ),
             ),

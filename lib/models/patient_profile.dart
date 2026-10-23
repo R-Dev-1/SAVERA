@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 /// Model data pasien SAVERA
 class PatientProfile {
@@ -7,8 +7,9 @@ class PatientProfile {
   static String jk = 'Laki-laki';
   static String tinggi = '165';
   static String berat = '62';
+  static String lokasi = 'Rumah - Jl. Merdeka No. 12, Bandung';
   static String catatan = '';
-  static File? fotoFile; // File foto lokal yang dipilih user
+  static Uint8List? fotoBytes; // Byte data foto yang kompatibel 100% di Web, Mobile, dan Desktop
 
   static String get initials {
     final parts = nama.trim().split(RegExp(r'\s+'));
