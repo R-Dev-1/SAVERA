@@ -1,4 +1,4 @@
-name: teman_riset
+name: savera
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -38,6 +38,7 @@ dependencies:
   firebase_core: ^4.15.0
   image_picker: ^1.1.2
   google_fonts: ^6.2.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +91,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: "AppIcon"
+  image_path: "assets\\images\\icon_app_savera.jpeg"
+  min_sdk_android: 21
+  remove_alpha_ios: true
