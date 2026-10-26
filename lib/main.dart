@@ -3,7 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
-import 'pages/landing_page.dart'; // Mengimpor file halaman landing
+import 'pages/landing_page.dart'; 
+import 'pages/home_page.dart'; // Pastikan path dan nama file Dashboard Anda sesuai
+import 'models/patient_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,10 +14,21 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Muat data dari memori perangkat
+  await PatientProfile.loadData();
+
   // Menjalankan fungsi uji coba membaca data real-time dari Firebase
   testFirebaseRealtimeQuery();
 
-  runApp(const MyApp());
+  // Logika Pengarah Halaman (Router)
+  Widget halamanPertama;
+  if (PatientProfile.nama.isNotEmpty) {
+    halamanPertama = const DashboardScreen(); // Langsung ke Dashboard jika data sudah ada
+  } else {
+    halamanPertama = const WelcomeScreen(); // Ke halaman Welcome/Setup jika belum ada data
+  }
+
+  runApp(MyApp(halamanPertama: halamanPertama));
 }
 
 /// Fungsi uji coba (test query) sederhana untuk membaca data real-time dari Firebase
@@ -52,7 +65,10 @@ void testFirebaseRealtimeQuery() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget halamanPertama;
+
+  // Menerima variabel halamanPertama melalui constructor
+  const MyApp({super.key, required this.halamanPertama});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +82,8 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
-      home: const WelcomeScreen(), // Memanggil Halaman 1
+      // Menggunakan variabel dinamis, bukan hardcode
+      home: halamanPertama, 
     );
   }
 }

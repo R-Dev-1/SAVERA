@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/patient_profile.dart';
-import 'monitoring_loading_page.dart';
+import 'monitoring_loading_page.dart'; // Pastikan file ini ada sesuai kode Anda sebelumnya
 
-/// Halaman Profil Pasien (Mendukung mode Setup dan mode Edit)
-/// Sesuai spesifikasi 100% dari SAVERA_Semua_Halaman.html (Halaman 2 & 6)
 class ProfilePage extends StatefulWidget {
-  final bool isSetup; // true: Isi Profil Pasien (Halaman 2), false: Edit Profil Pasien (Halaman 6)
+  final bool isSetup; 
 
   const ProfilePage({super.key, this.isSetup = false});
 
@@ -101,11 +99,10 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } catch (e) {
-      // ignore: user mungkin tolak permission
+      // ignore
     }
   }
 
-  // Warna sesuai UI Guidelines SAVERA
   static const Color kNavy = Color(0xFF0B2A6E);
   static const Color kInk = Color(0xFF0F1E3D);
   static const Color kBlue = Color(0xFF1E6FEB);
@@ -125,8 +122,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _beratController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.berat);
     _lokasiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.lokasi);
     _catatanController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.catatan);
-    _selectedJk = widget.isSetup ? 'Laki-laki' : PatientProfile.jk;
-    _pickedBytes = PatientProfile.fotoBytes; // load existing photo if any
+    _selectedJk = widget.isSetup ? 'Laki-laki' : (PatientProfile.jk.isEmpty ? 'Laki-laki' : PatientProfile.jk);
+    _pickedBytes = PatientProfile.fotoBytes; 
   }
 
   @override
@@ -140,7 +137,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  void _save() {
+  // UBAH MENJADI ASYNC UNTUK MENUNGGU PENYIMPANAN
+  Future<void> _save() async {
     final nama = _namaController.text.trim();
     final usia = _usiaController.text.trim();
 
@@ -167,6 +165,9 @@ class _ProfilePageState extends State<ProfilePage> {
           : lokasi;
       PatientProfile.catatan = _catatanController.text.trim();
     });
+
+    // SIMPAN KE MEMORI LOKAL
+    await PatientProfile.saveData();
 
     if (widget.isSetup) {
       Future.delayed(const Duration(milliseconds: 300), () {
@@ -215,7 +216,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   const SizedBox(height: 10),
 
-                  // --- Card Header Halaman ---
                   if (widget.isSetup)
                     Container(
                       decoration: BoxDecoration(
@@ -233,6 +233,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Image.asset(
                           'assets/images/header_profil_pasien_card.png',
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => 
+                              Container(height: 100, color: kL2, child: const Center(child: Text('Gambar tidak ditemukan'))),
                         ),
                       ),
                     )
@@ -301,14 +303,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 14),
 
-                  // --- Avatar Besar dengan Badge Kamera (tap untuk upload) ---
                   GestureDetector(
                     onTap: _pickPhoto,
                     child: Center(
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          // Lingkaran avatar
                           Container(
                             width: 96,
                             height: 96,
@@ -353,7 +353,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                           ),
                                   ),
                           ),
-                          // Badge Kamera
                           Positioned(
                             right: -2,
                             bottom: -2,
@@ -395,7 +394,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 12),
 
-                  // --- Pesan Sukses / Error ---
                   if (_errorMessage != null)
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -428,7 +426,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
 
-                  // --- Form Card (.card.form) ---
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -442,7 +439,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Field Nama
                         Text(
                           widget.isSetup ? 'Nama *' : 'Nama',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
@@ -456,7 +452,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const SizedBox(height: 14),
 
-                        // Field Jenis Kelamin (Segmented Button)
                         const Text(
                           'Jenis Kelamin',
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
@@ -484,7 +479,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const SizedBox(height: 14),
 
-                        // 3 Kolom: Usia, Tinggi, Berat
                         Row(
                           children: [
                             Expanded(
@@ -557,7 +551,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const SizedBox(height: 14),
 
-                        // Lokasi Pemantauan (Alamat Tempat Tinggal Pasien)
                         const Text(
                           'Lokasi Pemantauan (Alamat)',
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
@@ -571,7 +564,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const SizedBox(height: 14),
 
-                        // Catatan Kesehatan
                         const Text(
                           'Catatan Kesehatan (opsional)',
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
@@ -604,7 +596,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 14),
 
-                  // --- Card Jam Tangan Pasien (.card.dev) ---
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -648,7 +639,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 24),
 
-                  // --- Tombol Simpan (.btn) ---
                   Container(
                     width: double.infinity,
                     height: 60,
@@ -752,8 +742,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-/// Painter vector ikon user persis sesuai SVG acuan:
-/// `<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/>`
 class UserOutlinePainter extends CustomPainter {
   final Color color;
   const UserOutlinePainter({required this.color});
@@ -771,17 +759,12 @@ class UserOutlinePainter extends CustomPainter {
 
     canvas.save();
     canvas.scale(scaleX, scaleY);
-
-    // Circle head: cx 12, cy 8, r 4
     canvas.drawCircle(const Offset(12, 8), 4, paint);
-
-    // Shoulder curve: M4 21c0-4 3.5-6 8-6s8 2 8 6
     final path = Path();
     path.moveTo(4, 21);
     path.cubicTo(4, 17, 7.5, 15, 12, 15);
     path.cubicTo(16.5, 15, 20, 17, 20, 21);
     canvas.drawPath(path, paint);
-
     canvas.restore();
   }
 
@@ -789,8 +772,6 @@ class UserOutlinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Painter vector ikon kamera persis sesuai SVG acuan:
-/// `<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>`
 class CameraOutlinePainter extends CustomPainter {
   final Color color;
   const CameraOutlinePainter({required this.color});
@@ -808,8 +789,6 @@ class CameraOutlinePainter extends CustomPainter {
 
     canvas.save();
     canvas.scale(scaleX, scaleY);
-
-    // Camera body: M4 8h3l2-3h6l2 3h3v11H4z
     final body = Path();
     body.moveTo(4, 8);
     body.lineTo(7, 8);
@@ -821,10 +800,7 @@ class CameraOutlinePainter extends CustomPainter {
     body.lineTo(4, 19);
     body.close();
     canvas.drawPath(body, paint);
-
-    // Camera lens: circle cx 12, cy 13, r 3.5
     canvas.drawCircle(const Offset(12, 13), 3.5, paint);
-
     canvas.restore();
   }
 
