@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'profile_page.dart'; // Navigasi ke Halaman Isi Profil Pasien
+import 'monitoring_loading_page.dart'; // Navigasi ke Layar Animasi Pemantauan
+import '../models/patient_profile.dart'; // Model Profil Pasien Lokal
 import '../widgets/animated_savera_text.dart'; // Teks animasi siluet SAVERA
 
 /// ============================================================================
@@ -9,17 +12,60 @@ import '../widgets/animated_savera_text.dart'; // Teks animasi siluet SAVERA
 
 // --- Skema Warna Desain SAVERA (Tokens :root) ---
 const Color kNavy = Color(0xFF0B2A6E); // Brand utama, heading, judul aplikasi
-const Color kInk = Color(0xFF0F1E3D);  // Teks judul gelap
+const Color kInk = Color(0xFF0F1E3D); // Teks judul gelap
 const Color kBlue = Color(0xFF1E6FEB); // Biru primer, aksen, ikon
-const Color kSky = Color(0xFF0EA5E9);  // Cyan aksen cerah, gradien awal
-const Color kL1 = Color(0xFFF0F7FF);   // Latar belakang layar (ice light blue)
-const Color kL2 = Color(0xFFE0F0FE);   // Latar wadah ikon
-const Color kL3 = Color(0xFFBAE0FD);   // Ambient glow radial
-const Color kMuted = Color(0xFF64748B);// Teks sekunder, footnote
+const Color kSky = Color(0xFF0EA5E9); // Cyan aksen cerah, gradien awal
+const Color kL1 = Color(0xFFF0F7FF); // Latar belakang layar (ice light blue)
+const Color kL2 = Color(0xFFE0F0FE); // Latar wadah ikon
+const Color kL3 = Color(0xFFBAE0FD); // Ambient glow radial
+const Color kMuted = Color(0xFF64748B); // Teks sekunder, footnote
 const Color kBody = Color(0xFF334155); // Teks paragraf pengantar
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  late Future<PatientProfile?> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = PatientProfile.loadFromLocal();
+  }
+
+  void _refreshProfile() {
+    setState(() {
+      _profileFuture = PatientProfile.loadFromLocal();
+    });
+  }
+
+  Future<void> _handleMulai(BuildContext context, bool hasProfile) async {
+    if (hasProfile) {
+      // 2. Jika profil SUDAH ADA (tidak null):
+      // Aksi tombol "Mulai": langsung navigasi ke MonitoringLoadingPage (pushReplacement)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MonitoringLoadingPage()),
+      );
+    } else {
+      // 3. Jika profil BELUM ADA:
+      // Aksi tombol "Mulai": navigasi ke ProfilePage (push) untuk pengisian data pertama kali
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfilePage(isSetup: true),
+        ),
+      );
+      // Perbarui status profil setelah kembali dari halaman pengisian data
+      if (mounted) {
+        _refreshProfile();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +106,9 @@ class WelcomeScreen extends StatelessWidget {
                       return SingleChildScrollView(
                         physics: const ClampingScrollPhysics(),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
                           child: IntrinsicHeight(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,7 +151,9 @@ class WelcomeScreen extends StatelessWidget {
 
                                 // --- Paragraf Pengantar (.lead) ---
                                 const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.0,
+                                  ),
                                   child: Text(
                                     'Pantau tanda vital dan risiko jatuh lansia secara langsung, untuk ketenangan keluarga.',
                                     textAlign: TextAlign.center,
@@ -120,21 +170,30 @@ class WelcomeScreen extends StatelessWidget {
 
                                 // --- Daftar Fitur (.feat) ---
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
                                   child: Column(
                                     children: [
                                       _buildFeatureItem(
-                                        iconPainter: const HeartPulsePainter(color: kBlue),
-                                        text: 'Denyut nadi dan saturasi oksigen',
+                                        iconPainter: const HeartPulsePainter(
+                                          color: kBlue,
+                                        ),
+                                        text:
+                                            'Denyut nadi dan saturasi oksigen',
                                       ),
                                       const SizedBox(height: 12),
                                       _buildFeatureItem(
-                                        iconPainter: const MotionWavePainter(color: kBlue),
+                                        iconPainter: const MotionWavePainter(
+                                          color: kBlue,
+                                        ),
                                         text: 'Deteksi jatuh dari sensor gerak',
                                       ),
                                       const SizedBox(height: 12),
                                       _buildFeatureItem(
-                                        iconPainter: const LocationPinPainter(color: kBlue),
+                                        iconPainter: const LocationPinPainter(
+                                          color: kBlue,
+                                        ),
                                         text: 'Lokasi dan riwayat kejadian',
                                       ),
                                     ],
@@ -144,79 +203,112 @@ class WelcomeScreen extends StatelessWidget {
                                 const Spacer(),
 
                                 // --- Bagian Aksi & Tombol (.act) ---
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 22.0),
-                                  child: Column(
-                                    children: [
-                                      // Tombol Mulai (.btn)
-                                      Container(
-                                        width: double.infinity,
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(16),
-                                          gradient: const LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [kSky, kBlue],
-                                          ),
-                                          boxShadow: const [
-                                            BoxShadow(
-                                              color: Color(0x4D1E6FEB), // rgba(30, 111, 235, 0.3)
-                                              blurRadius: 24,
-                                              offset: Offset(0, 10),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(16),
-                                            onTap: () {
-                                              // Navigasi ke Halaman 2: Isi Profil Pasien
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => const ProfilePage(isSetup: true),
+                                FutureBuilder<PatientProfile?>(
+                                  future: _profileFuture,
+                                  builder: (context, snapshot) {
+                                    final bool hasProfile =
+                                        snapshot.hasData &&
+                                        snapshot.data != null;
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 22.0),
+                                      child: Column(
+                                        children: [
+                                          // Tombol Mulai (.btn)
+                                          Container(
+                                            width: double.infinity,
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              gradient: const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [kSky, kBlue],
+                                              ),
+                                              boxShadow: const [
+                                                BoxShadow(
+                                                  color: Color(
+                                                    0x4D1E6FEB,
+                                                  ), // rgba(30, 111, 235, 0.3)
+                                                  blurRadius: 24,
+                                                  offset: Offset(0, 10),
                                                 ),
-                                              );
-                                            },
-                                            child: const Center(
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    'Mulai',
-                                                    style: TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: Colors.white,
-                                                    ),
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                onTap: () async {
+                                                  // Pastikan status profil sudah terverifikasi
+                                                  final profile =
+                                                      snapshot.connectionState ==
+                                                          ConnectionState.done
+                                                      ? snapshot.data
+                                                      : await _profileFuture;
+                                                  final bool isSaved =
+                                                      profile != null;
+
+                                                  if (!context.mounted) return;
+                                                  _handleMulai(
+                                                    context,
+                                                    isSaved,
+                                                  );
+                                                },
+                                                child: const Center(
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        'Mulai',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 10),
+                                                      CustomPaint(
+                                                        size: Size(20, 20),
+                                                        painter: ArrowPainter(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  SizedBox(width: 10),
-                                                  CustomPaint(
-                                                    size: Size(20, 20),
-                                                    painter: ArrowPainter(color: Colors.white),
-                                                  ),
-                                                ],
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ),
 
-                                      const SizedBox(height: 12),
+                                          const SizedBox(height: 12),
 
-                                      // Catatan Kaki (.foot)
-                                      const Text(
-                                        'Selanjutnya Anda diminta mengisi profil pasien',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: kMuted,
-                                        ),
+                                          // Catatan Kaki (.foot)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12.0,
+                                            ),
+                                            child: Text(
+                                              hasProfile
+                                                  ? 'Data profil sudah tersimpan. Jika ingin mengubah informasi, silakan gunakan menu Edit Profil di halaman Beranda.'
+                                                  : 'Selanjutnya Anda diminta mengisi profil pasien',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: kMuted,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -249,10 +341,7 @@ class WelcomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(11),
           ),
           alignment: Alignment.center,
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: iconPainter,
-          ),
+          child: CustomPaint(size: const Size(20, 20), painter: iconPainter),
         ),
         const SizedBox(width: 12),
         Expanded(

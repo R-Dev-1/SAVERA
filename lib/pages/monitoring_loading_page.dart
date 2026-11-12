@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'home_page.dart';
 
 /// Layar transisi "Membuka beranda pemantauan..." setelah pengisian profil
@@ -42,12 +43,10 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
       ),
     );
 
-    _pulseAnim = Tween<double>(begin: 0.96, end: 1.04).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    _pulseAnim = Tween<double>(
+      begin: 0.96,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.forward();
 
@@ -61,11 +60,8 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
                   const DashboardScreen(),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
-              },
+                    return FadeTransition(opacity: animation, child: child);
+                  },
               transitionDuration: const Duration(milliseconds: 500),
             ),
           );
@@ -125,8 +121,11 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
                           color: Colors.white,
                           colorBlendMode: BlendMode.srcIn,
                           errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.shield_rounded,
-                                  size: 46, color: Colors.white),
+                              const Icon(
+                                Icons.shield_rounded,
+                                size: 46,
+                                color: Colors.white,
+                              ),
                         ),
                       ),
                     ),
@@ -135,9 +134,9 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
 
                     // Teks SAVERA
                     ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [kNavy, kBlue],
-                      ).createShader(bounds),
+                      shaderCallback: (bounds) =>
+                          const LinearGradient(colors: [kNavy, kBlue])
+                              .createShader(bounds),
                       child: const Text(
                         'SAVERA',
                         style: TextStyle(
@@ -177,7 +176,9 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
                         child: LinearProgressIndicator(
                           value: _progressAnim.value,
                           backgroundColor: Colors.transparent,
-                          valueColor: const AlwaysStoppedAnimation<Color>(kBlue),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            kBlue,
+                          ),
                         ),
                       ),
                     ),

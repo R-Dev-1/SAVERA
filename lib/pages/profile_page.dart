@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../models/patient_profile.dart';
 import 'monitoring_loading_page.dart'; // Pastikan file ini ada sesuai kode Anda sebelumnya
 
 class ProfilePage extends StatefulWidget {
-  final bool isSetup; 
+  final bool isSetup;
 
   const ProfilePage({super.key, this.isSetup = false});
 
@@ -39,7 +40,11 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: kLine),
             boxShadow: const [
-              BoxShadow(color: Color(0x1F1E6FEB), blurRadius: 16, offset: Offset(0, 4)),
+              BoxShadow(
+                color: Color(0x1F1E6FEB),
+                blurRadius: 16,
+                offset: Offset(0, 4),
+              ),
             ],
           ),
           child: Column(
@@ -57,7 +62,11 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 16),
               const Text(
                 'Pilih Foto Profil',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kNavy),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: kNavy,
+                ),
               ),
               const SizedBox(height: 8),
               const Divider(color: Color(0xFFE2F0FD)),
@@ -66,15 +75,25 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundColor: Color(0xFFE0F0FE),
                   child: Icon(Icons.camera_alt_rounded, color: kBlue, size: 20),
                 ),
-                title: const Text('Kamera', style: TextStyle(color: kInk, fontWeight: FontWeight.w500)),
+                title: const Text(
+                  'Kamera',
+                  style: TextStyle(color: kInk, fontWeight: FontWeight.w500),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFFE0F0FE),
-                  child: Icon(Icons.photo_library_rounded, color: kBlue, size: 20),
+                  child: Icon(
+                    Icons.photo_library_rounded,
+                    color: kBlue,
+                    size: 20,
+                  ),
                 ),
-                title: const Text('Galeri Foto', style: TextStyle(color: kInk, fontWeight: FontWeight.w500)),
+                title: const Text(
+                  'Galeri Foto',
+                  style: TextStyle(color: kInk, fontWeight: FontWeight.w500),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -116,14 +135,28 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _namaController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.nama);
-    _usiaController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.usia);
-    _tinggiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.tinggi);
-    _beratController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.berat);
-    _lokasiController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.lokasi);
-    _catatanController = TextEditingController(text: widget.isSetup ? '' : PatientProfile.catatan);
-    _selectedJk = widget.isSetup ? 'Laki-laki' : (PatientProfile.jk.isEmpty ? 'Laki-laki' : PatientProfile.jk);
-    _pickedBytes = PatientProfile.fotoBytes; 
+    _namaController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.nama,
+    );
+    _usiaController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.usia,
+    );
+    _tinggiController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.tinggi,
+    );
+    _beratController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.berat,
+    );
+    _lokasiController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.lokasi,
+    );
+    _catatanController = TextEditingController(
+      text: widget.isSetup ? '' : PatientProfile.catatan,
+    );
+    _selectedJk = widget.isSetup
+        ? 'Laki-laki'
+        : (PatientProfile.jk.isEmpty ? 'Laki-laki' : PatientProfile.jk);
+    _pickedBytes = PatientProfile.fotoBytes;
   }
 
   @override
@@ -158,10 +191,16 @@ class _ProfilePageState extends State<ProfilePage> {
       PatientProfile.nama = nama.isEmpty ? 'Pak Budi' : nama;
       PatientProfile.usia = usia.isEmpty ? '72' : usia;
       PatientProfile.jk = _selectedJk;
-      PatientProfile.tinggi = _tinggiController.text.trim().isEmpty ? '165' : _tinggiController.text.trim();
-      PatientProfile.berat = _beratController.text.trim().isEmpty ? '62' : _beratController.text.trim();
+      PatientProfile.tinggi = _tinggiController.text.trim().isEmpty
+          ? '165'
+          : _tinggiController.text.trim();
+      PatientProfile.berat = _beratController.text.trim().isEmpty
+          ? '62'
+          : _beratController.text.trim();
       PatientProfile.lokasi = lokasi.isEmpty
-          ? (widget.isSetup ? 'Rumah - Jl. Merdeka No. 12, Bandung' : PatientProfile.lokasi)
+          ? (widget.isSetup
+                ? 'Rumah - Jl. Merdeka No. 12, Bandung'
+                : PatientProfile.lokasi)
           : lokasi;
       PatientProfile.catatan = _catatanController.text.trim();
     });
@@ -179,8 +218,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 const MonitoringLoadingPage(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 400),
           ),
         );
@@ -233,27 +272,31 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Image.asset(
                           'assets/images/header_profil_pasien_card.png',
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => 
-                              Container(height: 100, color: kL2, child: const Center(child: Text('Gambar tidak ditemukan'))),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 100,
+                                color: kL2,
+                                child: const Center(
+                                  child: Text('Gambar tidak ditemukan'),
+                                ),
+                              ),
                         ),
                       ),
                     )
                   else
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 18,
+                      ),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFE2F0FD),
-                            Color(0xFFEFF7FF),
-                          ],
+                          colors: [Color(0xFFE2F0FD), Color(0xFFEFF7FF)],
                         ),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: const Color(0xFFC0DCF9),
-                        ),
+                        border: Border.all(color: const Color(0xFFC0DCF9)),
                         boxShadow: const [
                           BoxShadow(
                             color: Color(0x0C1E6FEB),
@@ -272,9 +315,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               decoration: BoxDecoration(
                                 color: const Color(0xCCFFFFFF),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFC0DCF9)),
+                                border: Border.all(
+                                  color: const Color(0xFFC0DCF9),
+                                ),
                               ),
-                              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: kBlue),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                size: 18,
+                                color: kBlue,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -330,7 +379,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 : Container(
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2.5),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2.5,
+                                      ),
                                       gradient: const LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -349,7 +401,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                           )
                                         : const CustomPaint(
                                             size: Size(40, 40),
-                                            painter: UserOutlinePainter(color: Colors.white),
+                                            painter: UserOutlinePainter(
+                                              color: Colors.white,
+                                            ),
                                           ),
                                   ),
                           ),
@@ -362,12 +416,17 @@ class _ProfilePageState extends State<ProfilePage> {
                               decoration: BoxDecoration(
                                 color: kBlue,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               alignment: Alignment.center,
                               child: const CustomPaint(
                                 size: Size(16, 16),
-                                painter: CameraOutlinePainter(color: Colors.white),
+                                painter: CameraOutlinePainter(
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -381,7 +440,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     _pickedBytes != null
                         ? 'Foto terpilih ✓'
-                        : (widget.isSetup ? 'Tap untuk tambah foto (opsional)' : 'Tap untuk ubah foto'),
+                        : (widget.isSetup
+                              ? 'Tap untuk tambah foto (opsional)'
+                              : 'Tap untuk ubah foto'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -397,7 +458,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (_errorMessage != null)
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFFBEB),
                         borderRadius: BorderRadius.circular(12),
@@ -406,23 +470,36 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Text(
                         _errorMessage!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF92400E)),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF92400E),
+                        ),
                       ),
                     ),
 
                   if (_savedSuccess)
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFA7F3D0)),
                       ),
                       child: Text(
-                        widget.isSetup ? 'Profil tersimpan. Menuju Beranda...' : 'Profil berhasil disimpan',
+                        widget.isSetup
+                            ? 'Profil tersimpan. Menuju Beranda...'
+                            : 'Profil berhasil disimpan',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF065F46)),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF065F46),
+                        ),
                       ),
                     ),
 
@@ -433,7 +510,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: kLine),
                       boxShadow: const [
-                        BoxShadow(color: Color(0x121E6FEB), blurRadius: 12, offset: Offset(0, 3)),
+                        BoxShadow(
+                          color: Color(0x121E6FEB),
+                          blurRadius: 12,
+                          offset: Offset(0, 3),
+                        ),
                       ],
                     ),
                     child: Column(
@@ -441,7 +522,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Text(
                           widget.isSetup ? 'Nama *' : 'Nama',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kBody,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         _buildTextInput(
@@ -454,7 +539,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const Text(
                           'Jenis Kelamin',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kBody,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Row(
@@ -463,7 +552,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: _buildSegButton(
                                 label: 'Laki-laki',
                                 isSelected: _selectedJk == 'Laki-laki',
-                                onTap: () => setState(() => _selectedJk = 'Laki-laki'),
+                                onTap: () =>
+                                    setState(() => _selectedJk = 'Laki-laki'),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -471,7 +561,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: _buildSegButton(
                                 label: 'Perempuan',
                                 isSelected: _selectedJk == 'Perempuan',
-                                onTap: () => setState(() => _selectedJk = 'Perempuan'),
+                                onTap: () =>
+                                    setState(() => _selectedJk = 'Perempuan'),
                               ),
                             ),
                           ],
@@ -486,8 +577,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.isSetup ? 'Usia (th) *' : 'Usia (th)',
-                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                    widget.isSetup
+                                        ? 'Usia (th) *'
+                                        : 'Usia (th)',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: kBody,
+                                    ),
                                   ),
                                   const SizedBox(height: 6),
                                   _buildTextInput(
@@ -509,7 +606,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 children: [
                                   const Text(
                                     'Tinggi (cm)',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: kBody,
+                                    ),
                                   ),
                                   const SizedBox(height: 6),
                                   _buildTextInput(
@@ -531,7 +632,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 children: [
                                   const Text(
                                     'Berat (kg)',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: kBody,
+                                    ),
                                   ),
                                   const SizedBox(height: 6),
                                   _buildTextInput(
@@ -553,12 +658,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const Text(
                           'Lokasi Pemantauan (Alamat)',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kBody,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         _buildTextInput(
                           controller: _lokasiController,
-                          placeholder: 'Contoh: Rumah - Jl. Merdeka No. 12, Bandung',
+                          placeholder:
+                              'Contoh: Rumah - Jl. Merdeka No. 12, Bandung',
                           onChanged: (_) => setState(() {}),
                         ),
 
@@ -566,7 +676,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         const Text(
                           'Catatan Kesehatan (opsional)',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kBody),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kBody,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Container(
@@ -576,11 +690,18 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: kInputLine),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           child: TextField(
                             controller: _catatanController,
                             maxLines: 2,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: kInk),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: kInk,
+                            ),
                             decoration: const InputDecoration(
                               hintText: 'Contoh: riwayat penyakit atau alergi',
                               hintStyle: TextStyle(color: kMuted, fontSize: 13),
@@ -603,7 +724,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: kLine),
                       boxShadow: const [
-                        BoxShadow(color: Color(0x121E6FEB), blurRadius: 12, offset: Offset(0, 3)),
+                        BoxShadow(
+                          color: Color(0x121E6FEB),
+                          blurRadius: 12,
+                          offset: Offset(0, 3),
+                        ),
                       ],
                     ),
                     child: Row(
@@ -616,7 +741,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(11),
                           ),
                           alignment: Alignment.center,
-                          child: const Icon(Icons.watch_rounded, size: 20, color: kBlue),
+                          child: const Icon(
+                            Icons.watch_rounded,
+                            size: 20,
+                            color: kBlue,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Column(
@@ -624,7 +753,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             Text(
                               'Jam Tangan Pasien',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInk),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: kInk,
+                              ),
                             ),
                             SizedBox(height: 2),
                             Text(
@@ -650,7 +783,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         colors: [kSky, kBlue],
                       ),
                       boxShadow: const [
-                        BoxShadow(color: Color(0x4D1E6FEB), blurRadius: 24, offset: Offset(0, 10)),
+                        BoxShadow(
+                          color: Color(0x4D1E6FEB),
+                          blurRadius: 24,
+                          offset: Offset(0, 10),
+                        ),
                       ],
                     ),
                     child: Material(
@@ -660,7 +797,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: _save,
                         child: Center(
                           child: Text(
-                            widget.isSetup ? 'Simpan & Mulai Pantau' : 'Simpan Profil',
+                            widget.isSetup
+                                ? 'Simpan & Mulai Pantau'
+                                : 'Simpan Profil',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -701,7 +840,11 @@ class _ProfilePageState extends State<ProfilePage> {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: kInk),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: kInk,
+        ),
         decoration: InputDecoration(
           hintText: placeholder,
           hintStyle: const TextStyle(color: kMuted, fontSize: 13),

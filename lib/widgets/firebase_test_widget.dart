@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -17,11 +18,14 @@ class FirebaseRealtimeTestSheet extends StatefulWidget {
   const FirebaseRealtimeTestSheet({super.key});
 
   @override
-  State<FirebaseRealtimeTestSheet> createState() => _FirebaseRealtimeTestSheetState();
+  State<FirebaseRealtimeTestSheet> createState() =>
+      _FirebaseRealtimeTestSheetState();
 }
 
 class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
-  final DatabaseReference _testRef = FirebaseDatabase.instance.ref('test_connection');
+  final DatabaseReference _testRef = FirebaseDatabase.instance.ref(
+    'test_connection',
+  );
   bool _isSending = false;
   String? _statusMessage;
 
@@ -82,13 +86,46 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
       });
       if (mounted) {
         setState(() {
-          _statusMessage = '✅ Berhasil update sensor/bpm ($randomBpm BPM) ke Firebase!';
+          _statusMessage =
+              '✅ Berhasil update sensor/bpm ($randomBpm BPM) ke Firebase!';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _statusMessage = '❌ Gagal update sensor: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sendSampleHistoryLog(String title) async {
+    setState(() {
+      _isSending = true;
+      _statusMessage = null;
+    });
+
+    try {
+      final now = DateTime.now();
+      await FirebaseDatabase.instance
+          .ref('Devices/Device_01/History')
+          .push()
+          .set({'title': title, 'timestamp': now.millisecondsSinceEpoch});
+      if (mounted) {
+        setState(() {
+          _statusMessage = '✅ Berhasil log riwayat "$title" ke Firebase!';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = '❌ Gagal kirim log riwayat: $e';
         });
       }
     } finally {
@@ -139,7 +176,11 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                   color: const Color(0xFFEBF3FE),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.cloud_sync_rounded, color: kBlue, size: 24),
+                child: const Icon(
+                  Icons.cloud_sync_rounded,
+                  color: kBlue,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -156,10 +197,7 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                     ),
                     Text(
                       'Membaca stream node /test_connection',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: kMuted,
-                      ),
+                      style: TextStyle(fontSize: 12, color: kMuted),
                     ),
                   ],
                 ),
@@ -189,7 +227,11 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 18),
+                          Icon(
+                            Icons.error_outline_rounded,
+                            color: Color(0xFFDC2626),
+                            size: 18,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Koneksi Realtime Database Error',
@@ -204,12 +246,18 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                       const SizedBox(height: 6),
                       Text(
                         '${snapshot.error}',
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF991B1B)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF991B1B),
+                        ),
                       ),
                       const SizedBox(height: 6),
                       const Text(
                         '💡 Catatan: Jika error bertuliskan "Permission Denied", pastikan Security Rules di Firebase Console telah diset .read dan .write: true untuk tahap pengujian.',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF7F1D1D)),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF7F1D1D),
+                        ),
                       ),
                     ],
                   ),
@@ -230,7 +278,10 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                       SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: kBlue),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: kBlue,
+                        ),
                       ),
                       SizedBox(width: 12),
                       Text(
@@ -264,21 +315,33 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                           height: 10,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: hasData ? const Color(0xFF16A34A) : Colors.orange,
+                            color: hasData
+                                ? const Color(0xFF16A34A)
+                                : Colors.orange,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          hasData ? 'Terhubung (Live Real-time)' : 'Menunggu Data (Node Kosong)',
+                          hasData
+                              ? 'Terhubung (Live Real-time)'
+                              : 'Menunggu Data (Node Kosong)',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: hasData ? const Color(0xFF166534) : Colors.orange[800],
+                            color: hasData
+                                ? const Color(0xFF166534)
+                                : Colors.orange[800],
                           ),
                         ),
                         const Spacer(),
                         Text(
-                          DateTime.now().toLocal().toString().split('.').first.split(' ').last,
+                          DateTime.now()
+                              .toLocal()
+                              .toString()
+                              .split('.')
+                              .first
+                              .split(' ')
+                              .last,
                           style: const TextStyle(fontSize: 11, color: kMuted),
                         ),
                       ],
@@ -302,7 +365,9 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: Text(
-                        hasData ? value.toString() : '(Belum ada data di path /test_connection)',
+                        hasData
+                            ? value.toString()
+                            : '(Belum ada data di path /test_connection)',
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'monospace',
@@ -336,7 +401,10 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Icon(Icons.send_rounded, size: 16),
                   label: const Text('Kirim Ping Test'),
@@ -354,12 +422,74 @@ class _FirebaseRealtimeTestSheetState extends State<FirebaseRealtimeTestSheet> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _isSending ? null : _sendSampleVitalData,
-                  icon: const Icon(Icons.favorite_rounded, size: 16, color: Color(0xFFEF4444)),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    size: 16,
+                    color: Color(0xFFEF4444),
+                  ),
                   label: const Text('Simulasi BPM'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: kNavy,
                     side: const BorderSide(color: kLine),
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Tombol Simulasi Riwayat Firebase
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isSending
+                      ? null
+                      : () =>
+                            _sendSampleHistoryLog('Bahaya: Jatuh Terdeteksi!'),
+                  icon: const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: Color(0xFFEF4444),
+                  ),
+                  label: const Text(
+                    'Simulasi Jatuh',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFEF4444),
+                    side: const BorderSide(color: Color(0xFFFCA5A5)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isSending
+                      ? null
+                      : () => _sendSampleHistoryLog('Gelang Dipasang'),
+                  icon: const Icon(
+                    Icons.watch_rounded,
+                    size: 16,
+                    color: Colors.blueGrey,
+                  ),
+                  label: const Text(
+                    'Simulasi Gelang',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blueGrey,
+                    side: const BorderSide(color: kLine),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

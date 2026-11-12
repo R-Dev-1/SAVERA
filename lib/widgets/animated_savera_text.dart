@@ -66,7 +66,9 @@ class _AnimatedSaveraTextState extends State<AnimatedSaveraText>
                   widget.baseColor,
                   widget.baseColor,
                   widget.highlightColor,
-                  const Color(0xFFE0F2FE), // Siluet cahaya putih kebiruan berkilau
+                  const Color(
+                    0xFFE0F2FE,
+                  ), // Siluet cahaya putih kebiruan berkilau
                   widget.highlightColor,
                   widget.baseColor,
                   widget.baseColor,
