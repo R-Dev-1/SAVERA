@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/patient_profile.dart';
 import '../utils/event_helper.dart';
+import '../services/emergency_alert_service.dart';
 import 'profile_page.dart';
 import '../widgets/animated_savera_text.dart';
 import '../widgets/history_timeline_card.dart';
@@ -24,11 +25,21 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
   // Referensi Node Firebase Realtime Database untuk ESP32
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
     "Devices/Device_01",
   );
+
+  // Layanan Peringatan Darurat Jatuh (Fall Detection Alert)
+  final EmergencyAlertService _emergencyAlertService = EmergencyAlertService();
+  AppLifecycleState _currentLifecycleState =
+      WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+  bool _isFallIncidentActive = false;
+  bool _userSilencedFallIncident = false;
+  bool _isEmergencyDialogVisible = false;
+  BuildContext? _emergencyDialogContext;
 
   StreamSubscription<DatabaseEvent>? _subscription;
   Timer? _watchdogTimer; // Timer internal untuk mendeteksi alat mati / offline
@@ -78,10 +89,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Color get lineDivider =>
       _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
-  // Simulasi manual override (untuk kemudahan pengujian antarmuka)
-  bool _isManualOverride = false;
-  bool _manualWatchOff = false;
-
   static const Color kNavy = Color(0xFF0B2A6E);
   static const Color kBlue = Color(0xFF1E6FEB);
   static const Color kSky = Color(0xFF0EA5E9);
@@ -90,6 +97,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _emergencyAlertService.initialize(
+      onDismiss: () {
+        if (mounted) {
+          _stopAlertManually();
+          setState(() {});
+        }
+      },
+    );
     _startListening();
 
     // Batasi loading awal maksimal 2.5 detik agar pengguna tidak menunggu terlalu lama
@@ -101,6 +117,233 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _currentLifecycleState = state;
+    if (_isFallIncidentActive && !_userSilencedFallIncident) {
+      if (state == AppLifecycleState.resumed) {
+        _showEmergencyDialog();
+      } else {
+        _emergencyAlertService.showBackgroundNotification();
+      }
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // LOGIKA PERINGATAN DARURAT JATUH (FALL DETECTION ALERT)
+  // --------------------------------------------------------------------------
+  void _checkFallAlertStatus(Map<dynamic, dynamic> dataMap, bool isOffline) {
+    if (dataMap.isEmpty || isOffline) {
+      _handleFallCondition(false);
+      return;
+    }
+
+    final devStatus = (dataMap['DeviceStatus'] is Map)
+        ? dataMap['DeviceStatus'] as Map<dynamic, dynamic>
+        : ((dataMap['deviceStatus'] is Map)
+              ? dataMap['deviceStatus'] as Map<dynamic, dynamic>
+              : {});
+    final fallDetection = (dataMap['FallDetection'] is Map)
+        ? dataMap['FallDetection'] as Map<dynamic, dynamic>
+        : ((dataMap['fallDetection'] is Map)
+              ? dataMap['fallDetection'] as Map<dynamic, dynamic>
+              : {});
+    final activityData = (dataMap['Activity'] is Map)
+        ? dataMap['Activity'] as Map<dynamic, dynamic>
+        : ((dataMap['activity'] is Map)
+              ? dataMap['activity'] as Map<dynamic, dynamic>
+              : {});
+
+    final dynamic rawW =
+        devStatus['IsWorn'] ??
+        devStatus['isWorn'] ??
+        dataMap['IsWorn'] ??
+        dataMap['isWorn'] ??
+        dataMap['worn'];
+    final bool isWorn =
+        (rawW == true) ||
+        (rawW == 1) ||
+        (rawW?.toString().trim().toLowerCase() == 'true');
+
+    final bool isWatchActive = (isWorn && !isOffline);
+
+    final dynamic rawFallenValue =
+        fallDetection['IsFallen'] ??
+        fallDetection['isFallen'] ??
+        dataMap['IsFallen'] ??
+        dataMap['isFallen'];
+    final bool rawIsFallen =
+        (rawFallenValue == true) ||
+        (rawFallenValue == 1) ||
+        (rawFallenValue?.toString().trim().toLowerCase() == 'true');
+
+    final String? activityType =
+        activityData['Type']?.toString() ??
+        activityData['type']?.toString() ??
+        dataMap['Activity']?.toString();
+    final bool isActivityFallen =
+        activityType != null &&
+        (activityType.toLowerCase().contains('jatuh') ||
+            activityType.toLowerCase().contains('terjatuh'));
+
+    final bool isFallDetected =
+        isWatchActive && (rawIsFallen || isActivityFallen);
+
+    _handleFallCondition(isFallDetected);
+  }
+
+  void _handleFallCondition(bool isFallDetected) {
+    if (isFallDetected) {
+      _isFallIncidentActive = true;
+      if (!_userSilencedFallIncident) {
+        final bool isForeground =
+            (_currentLifecycleState == AppLifecycleState.resumed);
+        if (isForeground) {
+          _emergencyAlertService.triggerAlert(showNotification: false);
+          _showEmergencyDialog();
+        } else {
+          _emergencyAlertService.triggerAlert(showNotification: true);
+        }
+      }
+    } else {
+      // Kondisi normal / diam / alat terputus: matikan alarm dan tutup dialog
+      _isFallIncidentActive = false;
+      _userSilencedFallIncident = false;
+      if (_emergencyAlertService.isAlerting) {
+        _emergencyAlertService.stopAlert();
+      }
+      _dismissEmergencyDialog();
+    }
+  }
+
+  void _showEmergencyDialog() {
+    if (!mounted || _isEmergencyDialogVisible) return;
+
+    _isEmergencyDialogVisible = true;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
+      builder: (BuildContext dialogCtx) {
+        _emergencyDialogContext = dialogCtx;
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+              side: const BorderSide(color: Color(0xFFB91C1C), width: 2),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            elevation: 24,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 60,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'PERINGATAN DARURAT!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Sistem mendeteksi pasien terjatuh!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Segera periksa kondisi pasien dan pastikan keadaan aman.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFDC2626),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: const Icon(Icons.volume_off_rounded, size: 22),
+                      label: Text(
+                        'Matikan Alarm & Paham',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      onPressed: () {
+                        _stopAlertManually();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      _isEmergencyDialogVisible = false;
+      _emergencyDialogContext = null;
+    });
+  }
+
+  void _dismissEmergencyDialog() {
+    if (_isEmergencyDialogVisible) {
+      if (_emergencyDialogContext != null && _emergencyDialogContext!.mounted) {
+        Navigator.of(_emergencyDialogContext!, rootNavigator: true).pop();
+      }
+      _isEmergencyDialogVisible = false;
+      _emergencyDialogContext = null;
+    }
+  }
+
+  void _stopAlertManually() {
+    _userSilencedFallIncident = true;
+    _emergencyAlertService.stopAlert();
+    _dismissEmergencyDialog();
   }
 
   // 1. FUNGSI UNTUK MENDENGARKAN DATABASE (Stream Listener)
@@ -143,9 +386,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
 
             _isOffline = !isLiveOnline;
-            _isManualOverride =
-                false; // Sinkronkan kembali dengan data sensor nyata
             _deviceData = dataMap;
+            _checkFallAlertStatus(_deviceData, _isOffline);
 
             // Pelacakan status transisi pemasangan jam (IsWorn == false -> true) untuk sensor calibration
             final dynamic rawW =
@@ -195,6 +437,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Jika node null atau snapshot kosong, status menjadi offline/terputus
             _isOffline = true;
             _deviceData = {};
+            _checkFallAlertStatus({}, true);
           }
         });
 
@@ -213,6 +456,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _isOffline = true;
             _deviceData = {};
           });
+          _checkFallAlertStatus({}, true);
         }
       },
     );
@@ -230,12 +474,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _isOffline = true;
         });
+        _checkFallAlertStatus(_deviceData, true);
       }
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _dismissEmergencyDialog();
+    _emergencyAlertService.stopAlert();
     _calibrationTimer?.cancel();
     _loadingTimeout?.cancel();
     _subscription?.cancel(); // Matikan langganan database saat keluar layar
@@ -315,9 +563,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               (rawWornValue == 1) ||
               (rawWornValue?.toString().trim().toLowerCase() == 'true');
 
-          final bool isWorn = _isManualOverride
-              ? !_manualWatchOff
-              : (isWaiting ? false : isWornConfirmed);
+          final bool isWorn = isWaiting ? false : isWornConfirmed;
 
           // 1. ATURAN UTAMA (BYPASS MUTLAK):
           // Buat variabel boolean penentu keaktifan alat:
@@ -874,89 +1120,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 const SizedBox(width: 8),
 
-                // Status Badge Interaktif (Sedang Dipantau / Jam Dilepas / Alat Mati)
-                InkWell(
-                  onTap: () {
-                    // Berikan opsi toggle simulasi untuk pengujian visual mandiri
-                    setState(() {
-                      _isManualOverride = true;
-                      _manualWatchOff = !_manualWatchOff;
-                      final bool newWorn = !_manualWatchOff;
-                      if (newWorn && !_previousIsWorn) {
-                        _wornTransitionTime = DateTime.now();
-                        _calibrationTimer?.cancel();
-                        _calibrationTimer = Timer(
-                          const Duration(milliseconds: 3000),
-                          () {
-                            if (mounted) setState(() {});
-                          },
-                        );
-                      } else if (!newWorn) {
-                        _previousIsWorn = false;
-                        _wornTransitionTime = null;
-                        _calibrationTimer?.cancel();
-                      }
-                      _previousIsWorn = newWorn;
-                    });
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          _manualWatchOff
-                              ? 'Simulasi Aktif: Jam Tangan Dilepas'
-                              : 'Simulasi Aktif: Sedang Dipantau',
-                        ),
-                        duration: const Duration(seconds: 1),
-                        behavior: SnackBarBehavior.floating,
+                // Status Badge (Sedang Dipantau / Jam Dilepas / Alat Mati) - Strictly Read-Only
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: badgeBorder, width: 1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: badgeDot.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1.5),
                       ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: badgeBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: badgeBorder, width: 1.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: badgeDot.withValues(alpha: 0.12),
-                          blurRadius: 6,
-                          offset: const Offset(0, 1.5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isWaiting) ...[
-                          Icon(Icons.sync, size: 13, color: badgeTextColor),
-                          const SizedBox(width: 5),
-                        ] else ...[
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: badgeDot,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        Text(
-                          badgeTitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: badgeTextColor,
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isWaiting) ...[
+                        Icon(Icons.sync, size: 13, color: badgeTextColor),
+                        const SizedBox(width: 5),
+                      ] else ...[
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: badgeDot,
+                            shape: BoxShape.circle,
                           ),
                         ),
+                        const SizedBox(width: 6),
                       ],
-                    ),
+                      Text(
+                        badgeTitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: badgeTextColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1664,15 +1872,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _isManualOverride = true;
-          _manualWatchOff = !_manualWatchOff;
-        });
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
+    return Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -1929,8 +2129,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   // ===========================================================================
@@ -2248,45 +2447,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (isOff) {
       badgeWidget = Container(
         key: const ValueKey('badge-off'),
-        padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
         decoration: BoxDecoration(
           color: _isDarkMode
               ? const Color(0xFF334155)
-              : const Color(0xFF64748B),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: const Text(
-          'TIDAK AKTIF',
-          style: TextStyle(
-            fontSize: 9.5,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            letterSpacing: 0.5,
-          ),
-        ),
-      );
-    } else if (isCalibratingHr) {
-      badgeWidget = Container(
-        key: const ValueKey('badge-reading'),
-        padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
-        decoration: BoxDecoration(
-          color: _isDarkMode
-              ? const Color(0xFF0284C7)
-              : const Color(0xFF0284C7),
-          borderRadius: BorderRadius.circular(6),
+              : const Color(0xFF475569),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 5.5,
-              height: 5.5,
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEF4444),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+            const Text(
+              'TIDAK AKTIF',
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isCalibratingHr) {
+      badgeWidget = Container(
+        key: const ValueKey('badge-reading'),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0284C7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 5),
             const Text(
               'MEMBACA...',
               style: TextStyle(
@@ -2302,23 +2513,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       badgeWidget = Container(
         key: const ValueKey('badge-live'),
-        padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
         decoration: BoxDecoration(
           color: const Color(0xFF1E6FEB),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 5.5,
-              height: 5.5,
+              width: 6,
+              height: 6,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 5),
             const Text(
               'LIVE',
               style: TextStyle(
@@ -2355,41 +2566,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Card: Grafik BPM + Badge di Kiri, Angka BPM Besar & Bold di Kanan (Tanpa Ikon Hati)
+          // 1. Baris Teratas: Judul "Grafik BPM" di Kiri Mandiri, Status di Kanan
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Kiri: Judul & Badge (Responsif & Anti-Overflow)
+              // Kiri: Judul Mandiri
               Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Grafik BPM',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: textHeading,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 400),
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(opacity: animation, child: child),
-                      child: badgeWidget,
-                    ),
-                  ],
+                child: Text(
+                  'Grafik BPM',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: textHeading,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
 
-              // Kanan: Angka BPM Jauh Lebih Besar & Tebal (Bold), Berdampingan dengan Teks Kecil Subteks
+              // Kanan: Angka BPM & Subteks (cth: -- BPM • Terputus)
               Flexible(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
@@ -2440,7 +2637,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
-          const SizedBox(height: 16),
+          // 2. Space/Jarak vertikal di bawah judul sebelum badge
+          const SizedBox(height: 8),
+
+          // 3. Baris Kedua: Badge Status (TIDAK AKTIF / MEMBACA... / LIVE) di bawah judul
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: badgeWidget,
+          ),
+
+          // 4. Space vertikal yang longgar sebelum area grafik dimulai
+          const SizedBox(height: 12),
 
           // 2. Area Grafik dengan Sumbu Y di Kiri (Label Angka Dinamis dengan Animasi Peregangan Mulus)
           TweenAnimationBuilder<double>(

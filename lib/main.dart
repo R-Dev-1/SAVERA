@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'pages/landing_page.dart';
 import 'pages/home_page.dart'; // Pastikan path dan nama file Dashboard Anda sesuai
 import 'models/patient_profile.dart';
+import 'services/emergency_alert_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,9 @@ void main() async {
 
   // Muat data dari memori perangkat
   await PatientProfile.loadData();
+
+  // Inisialisasi Service Peringatan Darurat Jatuh
+  await EmergencyAlertService().initialize();
 
   // Menjalankan fungsi uji coba membaca data real-time dari Firebase
   testFirebaseRealtimeQuery();
