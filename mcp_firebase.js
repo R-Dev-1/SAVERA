@@ -36,7 +36,19 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "write_firebase",
-        description: "Menulis atau mengubah data ke Firebase Realtime Database.",
+        description: "Menulis atau menimpa data ke Firebase Realtime Database.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string" },
+            data: {},
+          },
+          required: ["path", "data"],
+        },
+      },
+      {
+        name: "update_firebase",
+        description: "Memperbarui field tertentu tanpa menimpa node di Firebase Realtime Database.",
         inputSchema: {
           type: "object",
           properties: {
@@ -45,6 +57,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["path", "data"],
         },
+      },
+      {
+        name: "push_firebase",
+        description: "Menambahkan child baru dengan ID unik otomatis ke Firebase Realtime Database.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string" },
+            data: {},
+          },
+          required: ["path", "data"],
+        },
+      },
+      {
+        name: "delete_firebase",
+        description: "Menghapus data atau node dari Firebase Realtime Database.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string" },
+          },
+          required: ["path"],
+        },
       }
     ],
   };
@@ -52,14 +87,24 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    if (request.params.name === "read_firebase") {
-      const snapshot = await db.ref(request.params.arguments.path).once("value");
+    const { name, arguments: args } = request.params;
+    if (name === "read_firebase") {
+      const snapshot = await db.ref(args.path).once("value");
       return { content: [{ type: "text", text: JSON.stringify(snapshot.val(), null, 2) }] };
-    } else if (request.params.name === "write_firebase") {
-      await db.ref(request.params.arguments.path).set(request.params.arguments.data);
-      return { content: [{ type: "text", text: "Data berhasil ditulis ke " + request.params.arguments.path }] };
+    } else if (name === "write_firebase") {
+      await db.ref(args.path).set(args.data);
+      return { content: [{ type: "text", text: "Data berhasil ditulis ke " + args.path }] };
+    } else if (name === "update_firebase") {
+      await db.ref(args.path).update(args.data);
+      return { content: [{ type: "text", text: "Data berhasil diperbarui di " + args.path }] };
+    } else if (name === "push_firebase") {
+      const newRef = await db.ref(args.path).push(args.data);
+      return { content: [{ type: "text", text: "Data berhasil di-push ke " + args.path + " dengan key " + newRef.key }] };
+    } else if (name === "delete_firebase") {
+      await db.ref(args.path).remove();
+      return { content: [{ type: "text", text: "Data berhasil dihapus dari " + args.path }] };
     }
-    throw new Error("Tool tidak ditemukan");
+    throw new Error("Tool tidak ditemukan: " + name);
   } catch (error) {
     return { content: [{ type: "text", text: "Error: " + error.message }] };
   }

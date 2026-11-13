@@ -128,25 +128,28 @@ class _HistoryTimelineCardState extends State<HistoryTimelineCard> {
             stream: _stream,
             builder: (context, snapshot) {
               // 1. Parsing data dari snapshot jika ada pembaruan data masuk
-              final rawValue = snapshot.data?.snapshot.value;
-              if (rawValue != null) {
-                final List<HistoryEvent> parsedEvents = [];
-                if (rawValue is Map) {
-                  rawValue.forEach((key, val) {
-                    if (val != null) {
-                      parsedEvents.add(HistoryEvent.fromFirebase(key, val));
-                    }
-                  });
-                } else if (rawValue is List) {
-                  for (int i = 0; i < rawValue.length; i++) {
-                    final item = rawValue[i];
-                    if (item != null) {
-                      parsedEvents.add(HistoryEvent.fromFirebase(i, item));
+              if (snapshot.hasData) {
+                final rawValue = snapshot.data!.snapshot.value;
+                if (rawValue != null) {
+                  final List<HistoryEvent> parsedEvents = [];
+                  if (rawValue is Map) {
+                    rawValue.forEach((key, val) {
+                      if (val != null) {
+                        parsedEvents.add(HistoryEvent.fromFirebase(key, val));
+                      }
+                    });
+                  } else if (rawValue is List) {
+                    for (int i = 0; i < rawValue.length; i++) {
+                      final item = rawValue[i];
+                      if (item != null) {
+                        parsedEvents.add(HistoryEvent.fromFirebase(i, item));
+                      }
                     }
                   }
-                }
-                if (parsedEvents.isNotEmpty) {
                   _inMemoryHistoryEvents = parsedEvents;
+                } else if (!widget.isOffline) {
+                  // Jika online dan node di Firebase memang kosong/dihapus, bersihkan cache riwayat
+                  _inMemoryHistoryEvents = [];
                 }
               }
 
@@ -263,43 +266,7 @@ class _HistoryTimelineCardState extends State<HistoryTimelineCard> {
                       lineDivider: effectiveDivider,
                     ),
 
-                  const SizedBox(height: 6),
-
-                  // Tombol "Lihat Semua Riwayat >" di bagian paling bawah
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        _showAllHistorySheet(
-                          context: context,
-                          events: todayEvents,
-                          isDarkMode: widget.isDarkMode,
-                          cardBg: effectiveCardBg,
-                          cardBorder: effectiveCardBorder,
-                          textHeading: effectiveHeading,
-                          textSecondary: effectiveSecondary,
-                          lineDivider: effectiveDivider,
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 4,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      child: Text(
-                        'Lihat Semua Riwayat >',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: widget.isDarkMode
-                              ? const Color(0xFF38BDF8)
-                              : const Color(0xFF1E6FEB),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Catatan: Tombol "Lihat Semua Riwayat >" disembunyikan sementara sesuai permintaan
                 ],
               );
             },
@@ -381,6 +348,7 @@ class _HistoryTimelineCardState extends State<HistoryTimelineCard> {
   }
 
   /// Bottom Sheet untuk menampilkan seluruh riwayat kejadian secara lengkap
+  // ignore: unused_element
   void _showAllHistorySheet({
     required BuildContext context,
     required List<HistoryEvent> events,

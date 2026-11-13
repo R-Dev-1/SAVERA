@@ -460,7 +460,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 6),
 
-                      // --- 4. Card Tren Denyut Nadi ---
+                      // --- 4. Card Grafik BPM ---
                       _buildPulseTrendCard(
                         isWaiting: isWaiting,
                         isOffline: _isOffline,
@@ -847,7 +847,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.cake_outlined,
+                                Icons.person_outline,
                                 size: 13,
                                 color: _isDarkMode
                                     ? const Color(0xFF38BDF8)
@@ -2218,7 +2218,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ===========================================================================
-  // 4. CARD TREN DENYUT NADI (Waveform Curve Chart Dinamis Real-Time)
+  // 4. CARD GRAFIK BPM (Waveform Curve Chart Dinamis Real-Time)
   // ===========================================================================
   Widget _buildPulseTrendCard({
     bool isWaiting = false,
@@ -2355,7 +2355,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Card: Tren Denyut Nadi + Badge di Kiri, Angka BPM Besar & Bold di Kanan (Tanpa Ikon Hati)
+          // 1. Header Card: Grafik BPM + Badge di Kiri, Angka BPM Besar & Bold di Kanan (Tanpa Ikon Hati)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -2367,7 +2367,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        'Tren Denyut Nadi',
+                        'Grafik BPM',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -2440,7 +2440,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // 2. Area Grafik dengan Sumbu Y di Kiri (Label Angka Dinamis dengan Animasi Peregangan Mulus)
           TweenAnimationBuilder<double>(
@@ -2454,7 +2454,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 curve: Curves.easeOutCubic,
                 builder: (context, animatedMinY, _) {
                   return SizedBox(
-                    height: 74,
+                    height: 205,
                     child: Row(
                       children: [
                         // Sumbu Y: Angka maxY (batas atas) & minY (batas bawah) dinamis (Hanya saat isWatchActive)
