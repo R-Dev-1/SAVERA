@@ -120,7 +120,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   children: [
                                     // Logo SAVERA (Tinggi 128px persis sesuai CSS .hero img)
                                     Image.asset(
-                                      'assets/images/logo_perisai.png',
+                                      'assets/images/icon_app_savera_asli.png',
                                       height: 128,
                                       fit: BoxFit.contain,
                                     ),

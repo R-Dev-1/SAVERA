@@ -859,7 +859,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/images/logo_perisai.png',
+                      'assets/images/icon_app_savera_asli.png',
                       height: 20,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => const Icon(

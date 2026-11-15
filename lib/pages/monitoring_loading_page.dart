@@ -114,7 +114,7 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
                         ),
                         alignment: Alignment.center,
                         child: Image.asset(
-                          'assets/images/logo_perisai.png',
+                          'assets/images/icon_app_savera_asli.png',
                           width: 46,
                           height: 46,
                           fit: BoxFit.contain,
