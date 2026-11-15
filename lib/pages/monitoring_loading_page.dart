@@ -114,7 +114,7 @@ class _MonitoringLoadingPageState extends State<MonitoringLoadingPage>
                         ),
                         alignment: Alignment.center,
                         child: Image.asset(
-                          'assets/images/icon_app_savera_asli.png',
+                          'assets/images/logo_savera_trans.png',
                           width: 46,
                           height: 46,
                           fit: BoxFit.contain,

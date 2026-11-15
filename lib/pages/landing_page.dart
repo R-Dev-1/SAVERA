@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'profile_page.dart'; // Navigasi ke Halaman Isi Profil Pasien
 import 'monitoring_loading_page.dart'; // Navigasi ke Layar Animasi Pemantauan
-import '../models/patient_profile.dart'; // Model Profil Pasien Lokal
-import '../widgets/animated_savera_text.dart'; // Teks animasi siluet SAVERA
+import '../models/patient_profile.dart'; // Model Profil Pasien Lokal// Teks animasi siluet SAVERA
 
 /// ============================================================================
 /// SAVERA - LAYAR SAMBUTAN (WELCOME SCREEN)
@@ -120,30 +119,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   children: [
                                     // Logo SAVERA (Tinggi 128px persis sesuai CSS .hero img)
                                     Image.asset(
-                                      'assets/images/icon_app_savera_asli.png',
+                                      'assets/images/logo_savera_atas_bawah.png',
                                       height: 128,
                                       fit: BoxFit.contain,
                                     ),
-                                    const SizedBox(height: 20),
 
-                                    // Judul Aplikasi (.nm) dengan animasi siluet cahaya & bold
-                                    const AnimatedSaveraText(
-                                      fontSize: 38,
-                                      letterSpacing: 7.0,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                    const SizedBox(height: 6),
-
-                                    // Subjudul Aplikasi (.sub)
-                                    const Text(
-                                      'Tanda Vital & Risiko Jatuh',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: kBlue,
-                                      ),
-                                    ),
                                   ],
                                 ),
 
