@@ -112,22 +112,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const SizedBox(height: 18),
+                                const SizedBox(height: 16),
 
                                 // --- Hero Section (.hero) ---
                                 Column(
                                   children: [
-                                    // Logo SAVERA (Tinggi 128px persis sesuai CSS .hero img)
+                                    // Logo SAVERA Utama (Hero Logo - Proporsional & Tajam)
                                     Image.asset(
                                       'assets/images/logo_savera_atas_bawah.png',
-                                      height: 128,
+                                      height: 185,
                                       fit: BoxFit.contain,
                                     ),
-
                                   ],
                                 ),
 
-                                const SizedBox(height: 28),
+                                const SizedBox(height: 24),
 
                                 // --- Paragraf Pengantar (.lead) ---
                                 const Padding(
