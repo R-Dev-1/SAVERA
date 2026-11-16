@@ -134,7 +134,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     horizontal: 8.0,
                                   ),
                                   child: Text(
-                                    'Pantau tanda vital dan risiko jatuh lansia secara langsung, untuk ketenangan keluarga.',
+                                    'Pantau tanda vital dan aktivitas lansia secara langsung, untuk ketenangan keluarga.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 14,
@@ -166,7 +166,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                         iconPainter: const MotionWavePainter(
                                           color: kBlue,
                                         ),
-                                        text: 'Deteksi jatuh dari sensor gerak',
+                                        text:
+                                            'Pemantauan aktivitas dan sensor gerak',
                                       ),
                                       const SizedBox(height: 12),
                                       _buildFeatureItem(

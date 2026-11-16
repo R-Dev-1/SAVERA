@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/patient_profile.dart';
 import '../utils/event_helper.dart';
-import '../services/emergency_alert_service.dart';
 import 'profile_page.dart';
 import '../widgets/animated_savera_text.dart';
 import '../widgets/history_timeline_card.dart';
@@ -25,21 +24,11 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with WidgetsBindingObserver {
+class _DashboardScreenState extends State<DashboardScreen> {
   // Referensi Node Firebase Realtime Database untuk ESP32
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
     "Devices/Device_01",
   );
-
-  // Layanan Peringatan Darurat Jatuh (Fall Detection Alert)
-  final EmergencyAlertService _emergencyAlertService = EmergencyAlertService();
-  AppLifecycleState _currentLifecycleState =
-      WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
-  bool _isFallIncidentActive = false;
-  bool _userSilencedFallIncident = false;
-  bool _isEmergencyDialogVisible = false;
-  BuildContext? _emergencyDialogContext;
 
   StreamSubscription<DatabaseEvent>? _subscription;
   Timer? _watchdogTimer; // Timer internal untuk mendeteksi alat mati / offline
@@ -97,15 +86,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _emergencyAlertService.initialize(
-      onDismiss: () {
-        if (mounted) {
-          _stopAlertManually();
-          setState(() {});
-        }
-      },
-    );
     _startListening();
 
     // Batasi loading awal maksimal 2.5 detik agar pengguna tidak menunggu terlalu lama
@@ -117,233 +97,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         });
       }
     });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _currentLifecycleState = state;
-    if (_isFallIncidentActive && !_userSilencedFallIncident) {
-      if (state == AppLifecycleState.resumed) {
-        _showEmergencyDialog();
-      } else {
-        _emergencyAlertService.showBackgroundNotification();
-      }
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // LOGIKA PERINGATAN DARURAT JATUH (FALL DETECTION ALERT)
-  // --------------------------------------------------------------------------
-  void _checkFallAlertStatus(Map<dynamic, dynamic> dataMap, bool isOffline) {
-    if (dataMap.isEmpty || isOffline) {
-      _handleFallCondition(false);
-      return;
-    }
-
-    final devStatus = (dataMap['DeviceStatus'] is Map)
-        ? dataMap['DeviceStatus'] as Map<dynamic, dynamic>
-        : ((dataMap['deviceStatus'] is Map)
-              ? dataMap['deviceStatus'] as Map<dynamic, dynamic>
-              : {});
-    final fallDetection = (dataMap['FallDetection'] is Map)
-        ? dataMap['FallDetection'] as Map<dynamic, dynamic>
-        : ((dataMap['fallDetection'] is Map)
-              ? dataMap['fallDetection'] as Map<dynamic, dynamic>
-              : {});
-    final activityData = (dataMap['Activity'] is Map)
-        ? dataMap['Activity'] as Map<dynamic, dynamic>
-        : ((dataMap['activity'] is Map)
-              ? dataMap['activity'] as Map<dynamic, dynamic>
-              : {});
-
-    final dynamic rawW =
-        devStatus['IsWorn'] ??
-        devStatus['isWorn'] ??
-        dataMap['IsWorn'] ??
-        dataMap['isWorn'] ??
-        dataMap['worn'];
-    final bool isWorn =
-        (rawW == true) ||
-        (rawW == 1) ||
-        (rawW?.toString().trim().toLowerCase() == 'true');
-
-    final bool isWatchActive = (isWorn && !isOffline);
-
-    final dynamic rawFallenValue =
-        fallDetection['IsFallen'] ??
-        fallDetection['isFallen'] ??
-        dataMap['IsFallen'] ??
-        dataMap['isFallen'];
-    final bool rawIsFallen =
-        (rawFallenValue == true) ||
-        (rawFallenValue == 1) ||
-        (rawFallenValue?.toString().trim().toLowerCase() == 'true');
-
-    final String? activityType =
-        activityData['Type']?.toString() ??
-        activityData['type']?.toString() ??
-        dataMap['Activity']?.toString();
-    final bool isActivityFallen =
-        activityType != null &&
-        (activityType.toLowerCase().contains('jatuh') ||
-            activityType.toLowerCase().contains('terjatuh'));
-
-    final bool isFallDetected =
-        isWatchActive && (rawIsFallen || isActivityFallen);
-
-    _handleFallCondition(isFallDetected);
-  }
-
-  void _handleFallCondition(bool isFallDetected) {
-    if (isFallDetected) {
-      _isFallIncidentActive = true;
-      if (!_userSilencedFallIncident) {
-        final bool isForeground =
-            (_currentLifecycleState == AppLifecycleState.resumed);
-        if (isForeground) {
-          _emergencyAlertService.triggerAlert(showNotification: false);
-          _showEmergencyDialog();
-        } else {
-          _emergencyAlertService.triggerAlert(showNotification: true);
-        }
-      }
-    } else {
-      // Kondisi normal / diam / alat terputus: matikan alarm dan tutup dialog
-      _isFallIncidentActive = false;
-      _userSilencedFallIncident = false;
-      if (_emergencyAlertService.isAlerting) {
-        _emergencyAlertService.stopAlert();
-      }
-      _dismissEmergencyDialog();
-    }
-  }
-
-  void _showEmergencyDialog() {
-    if (!mounted || _isEmergencyDialogVisible) return;
-
-    _isEmergencyDialogVisible = true;
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.75),
-      builder: (BuildContext dialogCtx) {
-        _emergencyDialogContext = dialogCtx;
-        return PopScope(
-          canPop: false,
-          child: Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: const BorderSide(color: Color(0xFFB91C1C), width: 2),
-            ),
-            backgroundColor: const Color(0xFFDC2626),
-            elevation: 24,
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 24,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.warning_amber_rounded,
-                      size: 60,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'PERINGATAN DARURAT!',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Sistem mendeteksi pasien terjatuh!',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Segera periksa kondisi pasien dan pastikan keadaan aman.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFDC2626),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      icon: const Icon(Icons.volume_off_rounded, size: 22),
-                      label: Text(
-                        'Matikan Alarm & Paham',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      onPressed: () {
-                        _stopAlertManually();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    ).then((_) {
-      _isEmergencyDialogVisible = false;
-      _emergencyDialogContext = null;
-    });
-  }
-
-  void _dismissEmergencyDialog() {
-    if (_isEmergencyDialogVisible) {
-      if (_emergencyDialogContext != null && _emergencyDialogContext!.mounted) {
-        Navigator.of(_emergencyDialogContext!, rootNavigator: true).pop();
-      }
-      _isEmergencyDialogVisible = false;
-      _emergencyDialogContext = null;
-    }
-  }
-
-  void _stopAlertManually() {
-    _userSilencedFallIncident = true;
-    _emergencyAlertService.stopAlert();
-    _dismissEmergencyDialog();
   }
 
   // 1. FUNGSI UNTUK MENDENGARKAN DATABASE (Stream Listener)
@@ -387,7 +140,6 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             _isOffline = !isLiveOnline;
             _deviceData = dataMap;
-            _checkFallAlertStatus(_deviceData, _isOffline);
 
             // Pelacakan status transisi pemasangan jam (IsWorn == false -> true) untuk sensor calibration
             final dynamic rawW =
@@ -437,7 +189,6 @@ class _DashboardScreenState extends State<DashboardScreen>
             // Jika node null atau snapshot kosong, status menjadi offline/terputus
             _isOffline = true;
             _deviceData = {};
-            _checkFallAlertStatus({}, true);
           }
         });
 
@@ -456,7 +207,6 @@ class _DashboardScreenState extends State<DashboardScreen>
             _isOffline = true;
             _deviceData = {};
           });
-          _checkFallAlertStatus({}, true);
         }
       },
     );
@@ -474,16 +224,12 @@ class _DashboardScreenState extends State<DashboardScreen>
         setState(() {
           _isOffline = true;
         });
-        _checkFallAlertStatus(_deviceData, true);
       }
     });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _dismissEmergencyDialog();
-    _emergencyAlertService.stopAlert();
     _calibrationTimer?.cancel();
     _loadingTimeout?.cancel();
     _subscription?.cancel(); // Matikan langganan database saat keluar layar
@@ -569,21 +315,6 @@ class _DashboardScreenState extends State<DashboardScreen>
           // Buat variabel boolean penentu keaktifan alat:
           final bool isWatchActive = (isWorn == true && !_isOffline);
 
-          // Ekstraksi nilai IsFallen
-          final dynamic rawFallenValue =
-              fallDetection['IsFallen'] ??
-              fallDetection['isFallen'] ??
-              data['IsFallen'] ??
-              data['isFallen'];
-          final bool rawIsFallen =
-              (rawFallenValue == true) ||
-              (rawFallenValue == 1) ||
-              (rawFallenValue?.toString().trim().toLowerCase() == 'true');
-
-          // JIKA isWatchActive == false (belum dipakai, dilepas, mati, offline, atau data baru dibuka/null),
-          // maka status isFallen harus DIPAKSA 100% false dan abaikan semua data "Jatuh" yang basi dari Firebase.
-          final bool isFallen = isWatchActive ? rawIsFallen : false;
-
           // Pengecekan Fase Kalibrasi / Transisi Awal Sensor setelah Jam Dipakai (IsWorn == true)
           final bool isWithinCalibrationWindow =
               (isWatchActive &&
@@ -660,7 +391,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                         isOffline: _isOffline,
                         isWorn: isWorn,
                         isWatchActive: isWatchActive,
-                        isFallen: isFallen,
                         isLowBattery: isLowBattery,
                         battery: batteryStr,
                         isCharging: isCharging,
@@ -687,7 +417,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                         isWorn: isWorn,
                         isWatchActive: isWatchActive,
                         isWithinCalibrationWindow: isWithinCalibrationWindow,
-                        isFallen: isFallen,
                         activityType: activityType,
                         fallDetection: fallDetection,
                       ),
@@ -757,7 +486,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     required bool isOffline,
     required bool isWorn,
     required bool isWatchActive,
-    required bool isFallen,
     String? battery,
     bool isCharging = false,
     String? lastUpdated,
@@ -770,20 +498,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     Color badgeTextColor;
     String badgeTitle;
 
-    // 3. GANTI LOGIKA TRIGGERING ALERT MERAH:
-    // Pastikan block widget yang merender banner merah BAHAYA JATUH di layar dan di profil benar-benar dibungkus dengan kondisi:
-    // if (isWorn && isFallen) { ... tampilkan banner merah ... } else { ... tampilkan banner normal/abu-abu ... }
-    if (isWatchActive && isWorn && isFallen) {
-      badgeBg = _isDarkMode ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2);
-      badgeBorder = _isDarkMode
-          ? const Color(0xFFDC2626)
-          : const Color(0xFFF87171);
-      badgeDot = const Color(0xFFEF4444);
-      badgeTextColor = _isDarkMode
-          ? const Color(0xFFFCA5A5)
-          : const Color(0xFF991B1B);
-      badgeTitle = 'Bahaya Jatuh!';
-    } else if (isWaiting) {
+    if (isWaiting) {
       badgeBg = _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
       badgeBorder = _isDarkMode
           ? const Color(0xFF334155)
@@ -1554,11 +1269,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     required bool isWorn,
     required bool isWatchActive,
     required bool isWithinCalibrationWindow,
-    required bool isFallen,
     String? activityType,
     required Map<dynamic, dynamic> fallDetection,
   }) {
-    // Penentuan styling berdasarkan status: Waiting, Alat Dilepas, Offline, Jatuh, Kalibrasi Awal, Aktivitas Dinamis
+    // Penentuan styling berdasarkan status: Waiting, Alat Dilepas, Offline, Kalibrasi Awal, Aktivitas Dinamis
     LinearGradient bannerGradient;
     Color borderColor;
     Color shadowColor;
@@ -1595,44 +1309,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
     final bool hasValidBg = (parsedBg != null && parsedBg > 0);
 
-    // 3. GANTI LOGIKA TRIGGERING ALERT MERAH:
-    // Pastikan block widget yang merender banner merah BAHAYA JATUH di layar dan di profil benar-benar dibungkus dengan kondisi:
-    // if (isWorn && isFallen) { ... tampilkan banner merah ... } else { ... tampilkan banner normal/abu-abu ... }
-    if (isWatchActive && isWorn && isFallen) {
-      // "Jatuh" -> Warna Merah Darurat (Red) - Hanya jika isWorn == true dan isWatchActive == true
-      bannerGradient = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: _isDarkMode
-            ? [const Color(0xFF500707), const Color(0xFF350404)]
-            : [const Color(0xFFFEE2E2), const Color(0xFFFECACA)],
-      );
-      borderColor = _isDarkMode
-          ? const Color(0xFFDC2626)
-          : const Color(0xFFF87171);
-      shadowColor = const Color(0x20DC2626);
-      iconGradient = [const Color(0xFFDC2626), const Color(0xFF991B1B)];
-      iconData = Icons.warning_rounded;
-      titleWidget = Text(
-        'BAHAYA: JATUH TERDETEKSI!',
-        style: TextStyle(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w900,
-          color: _isDarkMode
-              ? const Color(0xFFFCA5A5)
-              : const Color(0xFF7F1D1D),
-          letterSpacing: 0.2,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-      subText = 'Benturan terdeteksi, cek lansia';
-      subTextColor = _isDarkMode
-          ? const Color(0xFFF87171)
-          : const Color(0xFFB91C1C);
-      baValue = rawBa != null ? '$rawBa' : '-- g';
-      bgValue = rawBg != null ? '$rawBg' : '-- °/s';
-    } else if (isWaiting) {
+    if (isWaiting) {
       // FASE 1: Initial Loading State (UI Netral)
       bannerGradient = LinearGradient(
         begin: Alignment.topLeft,
@@ -1990,11 +1667,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ? const Color(0xFF64748B)
                                   : (isOffline
                                         ? const Color(0xFFEF4444)
-                                        : (isFallen
-                                              ? const Color(0xFFDC2626)
-                                              : (_isDarkMode
-                                                    ? const Color(0xFF94A3B8)
-                                                    : kBody))),
+                                        : (_isDarkMode
+                                              ? const Color(0xFF94A3B8)
+                                              : kBody)),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2014,15 +1689,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ? (_isDarkMode
                                               ? const Color(0xFFFCA5A5)
                                               : const Color(0xFF991B1B))
-                                        : (isFallen
-                                              ? (_isDarkMode
-                                                    ? const Color(0xFFFCA5A5)
-                                                    : const Color(0xFF7F1D1D))
-                                              : (_isDarkMode
-                                                    ? const Color(0xFF34D399)
-                                                    : const Color(
-                                                        0xFF064E3B,
-                                                      )))),
+                                        : (_isDarkMode
+                                              ? const Color(0xFF34D399)
+                                              : const Color(
+                                                  0xFF064E3B,
+                                                ))),
                               letterSpacing: -0.2,
                             ),
                           ),
@@ -2072,11 +1743,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ? const Color(0xFF64748B)
                                   : (isOffline
                                         ? const Color(0xFFEF4444)
-                                        : (isFallen
-                                              ? const Color(0xFFDC2626)
-                                              : (_isDarkMode
-                                                    ? const Color(0xFF94A3B8)
-                                                    : kBody))),
+                                        : (_isDarkMode
+                                              ? const Color(0xFF94A3B8)
+                                              : kBody)),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2096,15 +1765,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ? (_isDarkMode
                                               ? const Color(0xFFFCA5A5)
                                               : const Color(0xFF991B1B))
-                                        : (isFallen
-                                              ? (_isDarkMode
-                                                    ? const Color(0xFFFCA5A5)
-                                                    : const Color(0xFF7F1D1D))
-                                              : (_isDarkMode
-                                                    ? const Color(0xFF34D399)
-                                                    : const Color(
-                                                        0xFF064E3B,
-                                                      )))),
+                                        : (_isDarkMode
+                                              ? const Color(0xFF34D399)
+                                              : const Color(
+                                                  0xFF064E3B,
+                                                ))),
                               letterSpacing: -0.2,
                             ),
                           ),
